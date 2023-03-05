@@ -48,14 +48,13 @@ $(document).ready(function() {
           $.ajax({
             url: 'http://127.0.0.1:8000/account/api/login/refresh/',
             type: 'POST',
-            data: {
-              refresh_token: window.localStorage.getItem('refreshToken')
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + window.localStorage.getItem('accessToken')
             },
-            dataType: 'json',
+            data: JSON.stringify({refresh: window.localStorage.getItem('refreshToken')}),
             success: function(response) {
-              window.localStorage.setItem('accessToken', response.access_token);
-              window.localStorage.setItem('refreshToken', response.refresh_token);
-              // Make a request using the new access token
+              window.localStorage.setItem('accessToken', response.access);
             },
             error: function(jqXHR, textStatus, errorThrown) {
               console.log('Error getting new token:', errorThrown);
