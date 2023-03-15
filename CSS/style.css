@@ -7,3 +7,18 @@ html, body, #map {
     height: 100%;
     width: 100vw;
 }
+
+/* Get current location button styling */
+#getCurrentLocation{
+    margin-top: 80px;
+    margin-left: 11px;
+    border: none;
+    width: 30px;
+    height: 30px;
+    padding: none;
+}
+
+#getCurrentLocation img {
+    width: 30px;
+    height: 30px;
+}

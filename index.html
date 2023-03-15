@@ -22,22 +22,34 @@
     <!-- Marker cluster -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.0/MarkerCluster.Default.min.css" />
 
+    <!-- Open Source Routing Machine -->
+    <link rel="stylesheet" href="leaflet-routing-machine.css">
+    
+    <!-- Geoapify + Leaflet: Address Search Plugin -->
+    <link rel="stylesheet" href="https://unpkg.com/@geoapify/leaflet-address-search-plugin@^1/dist/L.Control.GeoapifyAddressSearch.min.css" />
+
   </head>
   <body>
-    <div>HELLO</div>
+    <div id="data"></div>
 
     <!-- add search bar for search the map -->
     <div id="SearchBar">
       <div class="d-flex align-items-center justify-content-center flex-column gap-4">
         <form class="d-flex" id="searchForm">
           <input id="searchValue" class="form-control me-1" type="search" placeholder="Search" aria-label="Search">
-          <button id="searchButton" class="btn btn-primary" type="submit">Search</button>
+          <button id="searchButton" type="button" class="btn btn-primary">Search</button>
         </form>
       </div>
     </div>
 
+    
+
     <!-- Add leaflet map to the page -->
-    <div id="map"></div>
+    <div id="map">
+      <button id="getCurrentLocation" type="button" class="btn btn-primary">
+        <img src="Images/target_location.avif" alt="target location image icon">
+      </button>
+    </div>
     
     <!-- Log out button -->
     <button id="loginButton">Log Out</button>
@@ -52,10 +64,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js"></script>
 
-
+    <!-- Open source routing macine -->
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+  
+    <!-- Geoapify + Leaflet: Address Search Plugin -->
+    <script src="https://unpkg.com/@geoapify/leaflet-address-search-plugin@^1/dist/L.Control.GeoapifyAddressSearch.min.js"></script>
+ 
     <!-- Import JS files -->
     <script src="JS/script.js"></script>
     <script src="JS/map.js"></script>
-
-  </body>
+    
+   </body>
 </html>

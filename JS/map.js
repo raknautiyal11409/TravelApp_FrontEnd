@@ -1,10 +1,12 @@
 var searchButton = document.getElementById("searchButton");
-var HOST = location.protocol + "//" + location.host;
+var getCurrentLocation = document.getElementById("getCurrentLocation");
+var HOST = 'http://127.0.0.1:8000/account';
 var locationMarker;
 var circle;
 var poi_markers;
 var current_loc;
 var map_ins;
+const map = L.map('map').fitWorld();
 
 // Add an event listener to the button
 searchButton.addEventListener('click', function() {
@@ -12,12 +14,43 @@ searchButton.addEventListener('click', function() {
     console.log('Button clicked!');
   });
 
-var map = L.map('map').fitWorld();
+// Get current location 
+getCurrentLocation.addEventListener('click', function() {
+    map_init_basic(map, null);
+    console.log('Button clicked!');
+  });
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap'
+// var map = L.map('map').fitWorld();
+
+// L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+//     maxZoom: 19,
+//     attribution: '© OpenStreetMap'
+// }).addTo(map);
+
+L.tileLayer('https://maps.geoapify.com/v1/tile/osm-bright-smooth/{z}/{x}/{y}.png?apiKey=826cc571070340f49a8ae82427859b4d', {
+  attribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://openmaptiles.org/" target="_blank">© OpenMapTiles</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap</a> contributors',
+  maxZoom: 20, id: 'osm-bright'
 }).addTo(map);
+
+
+// Add Geoapify Address Search control
+var myAPIKey = "826cc571070340f49a8ae82427859b4d"; 
+
+const addressSearchControl = L.control.addressSearch(myAPIKey, {
+    position: 'topright',
+    resultCallback: (address) => {
+      var location = [address['lat'] ,address['lon']];
+      if (locationMarker) {
+        map.removeLayer(locationMarker); // remove any previously added marker
+      }
+      map.flyTo(location, 16);
+      locationMarker = L.marker(location).addTo(map);
+    },
+    suggestionsCallback: (suggestions) => {
+      console.log(suggestions);
+    }
+  });
+  map.addControl(addressSearchControl);
 
 //create and icon to display the search results
 var LeafIcon = L.Icon.extend({
@@ -36,22 +69,69 @@ var greenIcon = new LeafIcon({
     shadowUrl: 'http://leafletjs.com/examples/custom-icons/leaf-shadow.png'
 })
 
-map.locate({setView: true, maxZoom: 16});
+// map.locate({setView: true, maxZoom: 16});
 
-function onLocationFound(e) {
-    var radius = e.accuracy;
+// function onLocationFound(e) {
+//     var radius = e.accuracy;
+//     $("#data").text(e.latlng);
 
-    L.marker(e.latlng).addTo(map)
-        .bindPopup("You are within " + radius + " meters from this point").openPopup();
+//     L.marker(e.latlng).addTo(map)
+//         .bindPopup("You are within " + radius + " meters from this point").openPopup();
 
-    L.circle(e.latlng, radius).addTo(map);
+//     L.circle(e.latlng, radius).addTo(map);
+// }
+
+// map.on('locationfound', onLocationFound);
+
+// function onLocationError(e) {
+//     alert(e.message);
+// }
+
+function map_init_basic(map, options) {
+    var pos;
+    map.setView([53.5, -8.5], 11);
+    updateLocation(map);
 }
 
-map.on('locationfound', onLocationFound);
-
-function onLocationError(e) {
-    alert(e.message);
+// call necessary functions to update user location and display the user location on the map
+function updateLocation(map) {
+    navigator.geolocation.getCurrentPosition(
+        function (pos) {
+            setMapToCurrentLocation(map, pos);
+            // update_db(pos);
+            current_loc = pos;
+            map_ins = map;
+        },
+        function (err) {
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 30000
+        }
+    );
 }
+
+// display the current location on the map
+function setMapToCurrentLocation(map, pos) {
+    console.log("In setMapToCurrentLocation.");
+    var myLatLon = L.latLng(pos.coords.latitude, pos.coords.longitude);
+    map.flyTo(myLatLon, 16); // added animation
+    // locationMarker = L.marker(myLatLon).addTo(map); // add the new marker to the application
+    if (circle) {
+        map.removeLayer(circle); //remove circle if already present
+    }
+
+    // add the circle around the current location
+    circle = L.circle(myLatLon, {
+        color: 'blue',
+        fillColor: 'blue',
+        fillOpacity: 0.3,
+        radius: 40
+    }).addTo(map);
+    $(".toast-body").html("Found location<br>Lat: " + myLatLon.lat + " Lon: " + myLatLon.lng);
+    $(".toast").toast('show');
+}
+
 
 
 function showPoiMarkers() {
@@ -67,39 +147,43 @@ function showPoiMarkers() {
     
     $.ajax({
         type: "POST",
-        headers: {"Authorization": localStorage.accessToken},
+        headers: {"Authorization": window.localStorage.getItem('accessToken')},
+        // contentType: "application/json",
         url: HOST + "/map_search/",
         data: {
             query: $("#searchValue").val(),
             bbox: map.getBounds().toBBoxString()
+        },
+        success: function(data) {
+
+            //Create a cluster group for our markers to avoid clutter. 'Marker Cluster' is a Leaflet plugin.
+            poi_markers = L.markerClusterGroup();
+            
+            // Handle GeoJSON response from the server.
+            var geoJsonLayer = L.geoJson(data, {
+                pointToLayer: function (feature, latlng) {
+                    // Associate each point with the icon we made earlier
+                    return L.marker(latlng, {icon: greenIcon});
+                },
+                onEachFeature: function (feature, layer) {
+                    // For each feature associate a popup with the 'name' property
+                    layer.bindPopup(feature.properties.name);
+                }
+            });
+            
+            // Add the GeoJSON layer to the cluster.
+            poi_markers.addLayer(geoJsonLayer);
+            
+            // Add the cluster to the map.
+            map.addLayer(poi_markers);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            var message = "OSM Overpass query failed.<br/>";
+            console.log("Status: " + jqXHR.status + " " + jqXHR.responseText);
+            showOkAlert(message);
+        },
+        always: function () {
+            toggleCentredSpinner("hide");
         }
-    }).done(function (data, status, xhr) {
-        
-        //Create a cluster group for our markers to avoid clutter. 'Marker Cluster' is a Leaflet plugin.
-        poi_markers = L.markerClusterGroup();
-        
-        // Handle GeoJSON response from the server.
-        var geoJsonLayer = L.geoJson(data, {
-            pointToLayer: function (feature, latlng) {
-                // Associate each point with the icon we made earlier
-                return L.marker(latlng, {icon: greenIcon});
-            },
-            onEachFeature: function (feature, layer) {
-                // For each feature associate a popup with the 'name' property
-                layer.bindPopup(feature.properties.name);
-            }
-        });
-        
-        // Add the GeoJSON layer to the cluster.
-        poi_markers.addLayer(geoJsonLayer);
-        
-        // Add the cluster to the map.
-        map.addLayer(poi_markers);
-    }).fail(function (xhr, status, error) {
-        var message = "OSM Overpass query failed.<br/>";
-        console.log("Status: " + xhr.status + " " + xhr.responseText);
-        showOkAlert(message);
-    }).always(function () {
-        toggleCentredSpinner("hide");
     });
 }
