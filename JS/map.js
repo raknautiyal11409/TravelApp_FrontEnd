@@ -8,17 +8,13 @@ var current_loc;
 var map_ins;
 const map = L.map('map').fitWorld();
 
-// Add an event listener to the button
-searchButton.addEventListener('click', function() {
-    showPoiMarkers();
-    console.log('Button clicked!');
-  });
+
 
 // Get current location 
-getCurrentLocation.addEventListener('click', function() {
-    map_init_basic(map, null);
-    console.log('Button clicked!');
-  });
+// getCurrentLocation.addEventListener('click', function() {
+//     map_init_basic(map, null);
+//     console.log('Button clicked!');
+//   });
 
 // var map = L.map('map').fitWorld();
 
@@ -32,6 +28,16 @@ L.tileLayer('https://maps.geoapify.com/v1/tile/osm-bright-smooth/{z}/{x}/{y}.png
   maxZoom: 20, id: 'osm-bright'
 }).addTo(map);
 
+var greenIcon = L.icon({
+    iconUrl: '../Images/icon.png',
+    shadowUrl: 'leaf-shadow.png',
+
+    iconSize:     [38, 95], // size of the icon
+    shadowSize:   [50, 64], // size of the shadow
+    iconAnchor:   [22, 94], // point of the icon which will correspond to marker's location
+    shadowAnchor: [4, 62],  // the same for the shadow
+    popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+});
 
 // Add Geoapify Address Search control
 var myAPIKey = "826cc571070340f49a8ae82427859b4d"; 
@@ -69,24 +75,8 @@ var greenIcon = new LeafIcon({
     shadowUrl: 'http://leafletjs.com/examples/custom-icons/leaf-shadow.png'
 })
 
-// map.locate({setView: true, maxZoom: 16});
 
-// function onLocationFound(e) {
-//     var radius = e.accuracy;
-//     $("#data").text(e.latlng);
-
-//     L.marker(e.latlng).addTo(map)
-//         .bindPopup("You are within " + radius + " meters from this point").openPopup();
-
-//     L.circle(e.latlng, radius).addTo(map);
-// }
-
-// map.on('locationfound', onLocationFound);
-
-// function onLocationError(e) {
-//     alert(e.message);
-// }
-
+// set map to user current location and save data to the database 
 function map_init_basic(map, options) {
     var pos;
     map.setView([53.5, -8.5], 11);
@@ -111,7 +101,15 @@ function updateLocation(map) {
     );
 }
 
+
 // display the current location on the map
+
+new L.cascadeButtons([
+    {icon:"fas fa-location-crosshairs" , ignoreActiveState:true , command: () =>{
+        map_init_basic(map, null);
+     }},
+], {position:'topleft', direction:'horizontal'}).addTo(map);
+
 function setMapToCurrentLocation(map, pos) {
     console.log("In setMapToCurrentLocation.");
     var myLatLon = L.latLng(pos.coords.latitude, pos.coords.longitude);
@@ -132,9 +130,8 @@ function setMapToCurrentLocation(map, pos) {
     $(".toast").toast('show');
 }
 
-
-
-function showPoiMarkers() {
+// show results of the overpass query on the map
+function showPoiMarkers() { 
     console.log("In showPoiMarkers");
     
     // If we have markers on the map from a previous query, we remove them.
@@ -187,3 +184,5 @@ function showPoiMarkers() {
         }
     });
 }
+
+// Add dive to display info of a location 
