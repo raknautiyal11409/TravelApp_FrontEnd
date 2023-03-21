@@ -17,8 +17,60 @@ html, body, #map {
     height: 30px;
     padding: none;
 }
+#mapButtons{
+    z-index: 1001;
+}
 
 #getCurrentLocation img {
     width: 30px;
     height: 30px;
 }
+
+/* the div styling  for continer */
+#show_location_details {
+    background-color: aliceblue;
+}
+
+/* show marker detials */
+#show_marker_det {
+    max-height: 170px;
+    height: 100%;
+    background-color: lightgrey;
+    max-width: 33%;
+    min-width: 380px;
+    border-radius: 20px;
+    padding: 10px;
+    pointer-events: all;
+}
+
+#show_marker_det_heding {
+    width: 100%;
+}
+
+#show_marker_det_buttons {
+    max-height: 50px;
+    height: 100%;
+}
+
+#show_marker_det_buttons .rounded-circle{
+    max-width: 50px;
+    height: 100%;
+}
+
+#show_marker_det_buttons button{
+    border: none;
+}
+
+.fa-bookmark {
+    color: rgb(252, 151, 0);
+}
+
+.fa-heart {
+    color: red;
+}
+
+.fa-map-location{
+    color: rgb(0, 153, 255);
+}
+
+

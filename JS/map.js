@@ -6,10 +6,56 @@ var circle;
 var poi_markers;
 var current_loc;
 var map_ins;
-const map = L.map('map').fitWorld();
+var showMarkerDetials
+const map = L.map('map', {
+    maxBounds: L.latLngBounds([90, -180], [-90, 180])
+}).fitWorld();
 
+// Add Geoapify Address Search control
+var myAPIKey = "826cc571070340f49a8ae82427859b4d"; 
+// mapBox API KEY
+const mapBoxAPIkey = 'pk.eyJ1IjoicmFrMTQwOSIsImEiOiJjbGZoYmx2ZTUzaGN0M3lwY2g5aGJwNG9wIn0.OfdLIA8gsn7riXEMGI-OMg'
 
+// -----------------  show marker details --------------------------
+showMarkerDetials = L.control.custom({
+    position: 'bottomleft',
+    content : '<div id="show_marker_det" class="container-sm">'+
+            '<h4 id="show_marker_det_heding" class="row mt-1 ms-2">Heading</h4>' +
+            '<div class="row container-fluid">' +
+            '<p class="row m-0" >Content</p>' +
+            '<p class="row m-0">Content</p>' +
+            '</div>' +
+            '<div  id="show_marker_det_buttons" class="row container-fluid mt-2">'+
+            '<button class="col rounded-circle ms-2 me-2" type="button">'+
+                '<i class="fas fa-book-bookmark fa-xl"></i>'+
+            '</button>'+
+            '<button class="col rounded-circle me-2" type="button">'+
+                '<i class="fas fa-heart fa-xl"></i>'+
+            '</button>'+
+            '<button class="col rounded-circle me-3" type="button">'+
+                '<i class="fas fa-map-pin fa-xl"></i>'+
+            '</button>'+
+            '<button class="col rounded-pill ms-5" type="button">'+
+                '<i class="fas fa-map-location fa-xl"></i>'+
+            '</button>'+
+            '</div>'+
+            '</div>',
+    classes : 'container',
+    style   :
+    {
+        height : '170px',
+        'pointer-events': 'none',
+    },
+    events:
+    {
+        click: function(data)
+        {
+            console.log('wrapper div element clicked');
+        },
+    }
+});
 
+// -----------------  add map layer --------------------------
 // Get current location 
 // getCurrentLocation.addEventListener('click', function() {
 //     map_init_basic(map, null);
@@ -28,20 +74,10 @@ L.tileLayer('https://maps.geoapify.com/v1/tile/osm-bright-smooth/{z}/{x}/{y}.png
   maxZoom: 20, id: 'osm-bright'
 }).addTo(map);
 
-var greenIcon = L.icon({
-    iconUrl: '../Images/icon.png',
-    shadowUrl: 'leaf-shadow.png',
-
-    iconSize:     [38, 95], // size of the icon
-    shadowSize:   [50, 64], // size of the shadow
-    iconAnchor:   [22, 94], // point of the icon which will correspond to marker's location
-    shadowAnchor: [4, 62],  // the same for the shadow
-    popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
-});
-
-// Add Geoapify Address Search control
-var myAPIKey = "826cc571070340f49a8ae82427859b4d"; 
-
+// set the minimum zoom level to 5
+map.setMinZoom(3);
+  
+// -----------------  add search --------------------------
 const addressSearchControl = L.control.addressSearch(myAPIKey, {
     position: 'topright',
     resultCallback: (address) => {
@@ -55,26 +91,10 @@ const addressSearchControl = L.control.addressSearch(myAPIKey, {
     suggestionsCallback: (suggestions) => {
       console.log(suggestions);
     }
-  });
-  map.addControl(addressSearchControl);
-
-//create and icon to display the search results
-var LeafIcon = L.Icon.extend({
-    options: {
-       iconSize:     [38, 95],
-       shadowSize:   [50, 64],
-       iconAnchor:   [22, 94],
-       shadowAnchor: [4, 62],
-       popupAnchor:  [-3, -76]
-    }
 });
+map.addControl(addressSearchControl);
 
-// create leaflet icons to pinpoint locations
-var greenIcon = new LeafIcon({
-    iconUrl: 'http://leafletjs.com/examples/custom-icons/leaf-green.png',
-    shadowUrl: 'http://leafletjs.com/examples/custom-icons/leaf-shadow.png'
-})
-
+// -----------------  dislplay current location --------------------------
 
 // set map to user current location and save data to the database 
 function map_init_basic(map, options) {
@@ -101,15 +121,14 @@ function updateLocation(map) {
     );
 }
 
-
-// display the current location on the map
-
+// button to fly to current location 
 new L.cascadeButtons([
     {icon:"fas fa-location-crosshairs" , ignoreActiveState:true , command: () =>{
         map_init_basic(map, null);
      }},
 ], {position:'topleft', direction:'horizontal'}).addTo(map);
 
+// set map to current location 
 function setMapToCurrentLocation(map, pos) {
     console.log("In setMapToCurrentLocation.");
     var myLatLon = L.latLng(pos.coords.latitude, pos.coords.longitude);
@@ -185,4 +204,34 @@ function showPoiMarkers() {
     });
 }
 
-// Add dive to display info of a location 
+// -----------------  click on map  --------------------------
+
+// Add a click event listener to the map
+map.on('click', function(e) {
+
+
+    if (locationMarker ) { // remove any previously added marker
+        map.removeLayer(locationMarker); 
+    }
+    map.removeControl(showMarkerDetials);
+});
+
+map.on('contextmenu', function(e) {
+    
+    if (locationMarker ) { // remove any previously added marker
+        map.removeLayer(locationMarker); 
+    }
+
+    // if(){ // refresh div
+    //     map.removeControl(showMarkerDetials);
+    // }
+    
+    // Add show marker div to page
+    showMarkerDetials.addTo(map);
+
+    // Create a new marker at the clicked location
+    locationMarker = L.marker(e.latlng).addTo(map);
+  });
+
+
+
