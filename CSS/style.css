@@ -5,7 +5,7 @@ body {
 
 html, body, #map {
     height: 100%;
-    width: 100vw;
+    width: 98.9vw;
 }
 
 /* Get current location button styling */
@@ -35,12 +35,13 @@ html, body, #map {
 #show_marker_det {
     max-height: 170px;
     height: 100%;
-    background-color: lightgrey;
+    background-color: white;
     max-width: 33%;
     min-width: 380px;
     border-radius: 20px;
     padding: 10px;
     pointer-events: all;
+    margin-left: 10px;
 }
 
 #show_marker_det_heding {
@@ -73,4 +74,13 @@ html, body, #map {
     color: rgb(0, 153, 255);
 }
 
+#close_button{
+    background-color: rgb(229, 40, 40);
+    border: none;
+    height: 30px;
+    width: 30px;
+}
 
+#close_button .fa-xmark{
+    color: aliceblue;
+}
