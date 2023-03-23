@@ -49,36 +49,41 @@ new L.cascadeButtons([
     events:
     {
         click: function() {
-            $('#toggleMenu').html('<i class="fas fa-xmark fa-2xl"></i>');
-            if(!toggleMenuExpanded){ // check if alredy expanded
-                $('#toggleMenu').animate( // toggle animation
-                    { deg: 90 },
-                    {
-                        duration: 400,
-                        step: function(now) {
-                            $(this).css({ transform: 'rotate(' + now + 'deg)' });
-                        }
-                    }
-                );
-                expandToggleMenu();
-            } else {
-                $('#toggleMenu').animate(
-                    { deg: -0 },
-                    {
-                        duration: 400,
-                        step: function(now) {
-                            $(this).css({ transform: 'rotate(' + now + 'deg)' });
-                        }
-                    }
-                );
-                map.removeControl(expandedMenu);
-                $('#toggleMenu').html('<i class="fas fa-bars fa-xl"></i>');
-                toggleMenuExpanded = false;
-            }
+            expandCollapeToggleMenu();
         },
         
     }
 }).addTo(map);
+
+function expandCollapeToggleMenu() {
+    $('#toggleMenu').html('<i class="fas fa-xmark fa-2xl"></i>');
+    if(!toggleMenuExpanded){ // check if alredy expanded
+        $('#toggleMenu').animate( // toggle animation
+            { deg: 90 },
+            {
+                duration: 400,
+                step: function(now) {
+                    $(this).css({ transform: 'rotate(' + now + 'deg)' });
+                }
+            }
+        );
+        expandToggleMenu();
+    } else {
+        $('#toggleMenu').animate(
+            { deg: -0 },
+            {
+                duration: 400,
+                step: function(now) {
+                    $(this).css({ transform: 'rotate(' + now + 'deg)' });
+                }
+            }
+        );
+        map.removeControl(expandedMenu);
+        $('#toggleMenu').html('<i class="fas fa-bars fa-xl"></i>');
+        toggleMenuExpanded = false;
+    }
+}
+
 
 // expanded toggle menu
 function expandToggleMenu() {
@@ -119,10 +124,6 @@ providers: [
 useMapBounds: 8
 }).addTo(map);
 
-searchControl.on('search:results', function(data) {
-    console.log(data.results);
-  });
-
 // create an empty layer group to store the results and add it to the map
 var results = L.layerGroup().addTo(map);
 
@@ -146,6 +147,8 @@ searchControl.on('results', function(data) {
         map.removeControl(showMarkerDetial);
         showMarkerDetialOnMap = false;
     }
+    
+    expandCollapeToggleMenu();
 
     // remove existing markers
     for (var i = 0; i < marker.length; i++) {
@@ -408,8 +411,6 @@ function showMarkerDetails(name, address, marerkerCords) {
     
     showMarkerDetialOnMap = true;
 }
-
-
 
 
 // show form to input folder name
