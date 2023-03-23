@@ -1,5 +1,4 @@
 var searchButton = document.getElementById("searchButton");
-var getCurrentLocation = document.getElementById("getCurrentLocation");
 
 var HOST = 'http://127.0.0.1:8000/account';
 var locationMarker;
@@ -18,34 +17,9 @@ const map = L.map('map', {
 }).fitWorld();
 var searchMarkers= [];
 
-// Add Geoapify Address Search control
-var myAPIKey = "826cc571070340f49a8ae82427859b4d"; 
-
 // Esri API
 const esriApiKey = 'AAPKe4688fca2b1c4405981a6518c0c88dcd4jIDDrgcGBJWw0ZxlKpyA6OAqsPzALckDhsqhpE-1y9YWu-PsVTzkgYC445HlTZv'
 const basemapEnum = "ArcGIS:Navigation";
-
-// mapBox API KEY
-const mapBoxAPIkey = 'pk.eyJ1IjoicmFrMTQwOSIsImEiOiJjbGZoYmx2ZTUzaGN0M3lwY2g5aGJwNG9wIn0.OfdLIA8gsn7riXEMGI-OMg'
-
-// -----------------  add map layer --------------------------
-// Get current location 
-// getCurrentLocation.addEventListener('click', function() {
-//     map_init_basic(map, null);
-//     console.log('Button clicked!');
-//   });
-
-// var map = L.map('map').fitWorld();
-
-// L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-//     maxZoom: 19,
-//     attribution: '© OpenStreetMap'
-// }).addTo(map);
-
-// L.tileLayer('https://maps.geoapify.com/v1/tile/osm-bright-smooth/{z}/{x}/{y}.png?apiKey=826cc571070340f49a8ae82427859b4d', {
-//   attribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://openmaptiles.org/" target="_blank">© OpenMapTiles</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap</a> contributors',
-//   maxZoom: 20, id: 'osm-bright'
-// }).addTo(map);
 
 // example using an Esri Basemap Styles API name
 L.esri.Vector.vectorBasemapLayer("ArcGIS:Streets", {
@@ -64,24 +38,6 @@ new L.cascadeButtons([
 ], {position:'topleft', direction:'horizontal'}).addTo(map);
   
 // -----------------  add search --------------------------
-
-// Geoapify geo coder 
-
-// const addressSearchControl = L.control.addressSearch(myAPIKey, {
-//     position: 'topright',
-//     resultCallback: (address) => {
-//       var location = [address['lat'] ,address['lon']];
-//       if (locationMarker) {
-//         map.removeLayer(locationMarker); // remove any previously added marker
-//       }
-//       map.flyTo(location, 16);
-//       locationMarker = L.marker(location).addTo(map);
-//     },
-//     suggestionsCallback: (suggestions) => {
-//       console.log(suggestions);
-//     }
-// });
-// map.addControl(addressSearchControl);
 
 // esri geocoder 
 var searchControl = L.esri.Geocoding.geosearch({
@@ -358,7 +314,7 @@ function showMarkerDetails(name, address, marerkerCords) {
                 '<p class="row m-0"> ' + marerkerCords + ' </p>' +
                 '</div>' +
                 '<div  id="show_marker_det_buttons" class="row container-fluid mt-2">'+
-                '<button class="col rounded-circle ms-2 me-2" type="button">'+
+                '<button id="addBookmarkButton" class="col rounded-circle ms-2 me-2" type="button">'+
                     '<i class="fas fa-book-bookmark fa-xl"></i>'+
                 '</button>'+
                 '<button class="col rounded-circle me-2" type="button">'+
@@ -379,8 +335,64 @@ function showMarkerDetails(name, address, marerkerCords) {
             'margin-left': '10px',  
         },
     }).addTo(map);
+
+    $('#addBookmarkButton').on('click', function() {
+        bookmarkFolderNameInput();
+    });
     
     showMarkerDetialOnMap = true;
+}
 
-    
+
+
+
+// show form to input folder name
+function bookmarkFolderNameInput() {
+
+    var nameInputBox = L.control.custom({
+        position: 'bottomleft',
+        id: 'addBookmarkFolder-Name',
+        content : '<form class="container">'+
+        '<label for="addFolder" class="row form-label">Input Folder Name</label>'+
+        '<input type="text" class="row form-control" id="addFolderNameInputField"/>'+
+        '<div id="addBookmarkFolder-buttons" class="row mt-2 ms-5">'+
+          '<button id="cancel-bookmark-action"  class="col btn btn-outline-danger btn-sml" type="button"> Cancel </button>'+
+          '<button id="add-bookmark-folder"  class="col ms-2 btn btn-primary" type="button"> Add </button>'+
+       ' </div>'+
+       ' </form>',
+        
+    }).addTo(map);
+
+    $('#cancel-bookmark-action').on('click', function(){
+        map.removeControl(nameInputBox);
+    });
+
+    $('#add-bookmark-folder').on('click', function(){
+        addBoomarkFolder($('#addFolderNameInputField').val(), nameInputBox)
+    });
+}
+
+// Add folder to the database
+function addBoomarkFolder(folderName, nameInputBox) {
+
+    if(folderName != "") {
+        $.ajax({
+            type: "POST",
+            headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
+            // contentType: "application/json",
+            url: HOST + "/api/addBookmarFolder/",
+            data: {
+                name: folderName
+            },
+            success: function(data) {
+                alert('Added Bookmark Folder Succesfully');
+                map.removeControl(nameInputBox);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('FAILED to add Bookmark Folder ');
+            },
+        });
+    } else{
+        alert("Please fill in the name")
+    }
 }

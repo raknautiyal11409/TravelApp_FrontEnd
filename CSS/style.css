@@ -8,6 +8,15 @@ html, body, #map {
     width: 98.9vw;
 }
 
+/* Login Page */
+ #login-form {
+    max-width: 500px;
+ }
+
+ #login-form  button{
+    max-width: 400px;
+ }
+
 /* Get current location button styling */
 #getCurrentLocation{
     margin-top: 80px;
@@ -84,3 +93,42 @@ html, body, #map {
 #close_button .fa-xmark{
     color: aliceblue;
 }
+
+/* Bookmark Add Name Form */
+#addBookmarkFolder-Name {
+    position: relative;
+    width: 100vw;
+    padding-top: 34vh;
+    height:1000px;
+    background-color: rgb(0, 0, 0,.2);
+    margin-top: -100px;
+    margin-bottom: -320px;
+    margin-left: -10px;
+    z-index: 1000;
+}
+
+#addBookmarkFolder-Name form {
+    opacity: 1;
+}
+
+#addBookmarkFolder-Name .container {
+    max-width: 300px;
+    background-color: white;
+    width: 300px;
+    padding: 20px;    
+    border-radius: 20px;
+}
+
+#addBookmarkFolder-Name .form-label{
+    margin-left: 5px;
+}
+
+#addBookmarkFolder-Name input{
+    width: 100%;
+    margin: 0;
+}
+
+#addBookmarkFolder-buttons{
+    width: 200px;
+}
+
