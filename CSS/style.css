@@ -9,31 +9,64 @@ html, body, #map {
 }
 
 /* Login Page */
- #login-form {
+#login-form {
     max-width: 500px;
- }
+}
 
- #login-form  button{
+#login-form  button{
     max-width: 400px;
- }
+}
 
-/* Get current location button styling */
-#getCurrentLocation{
-    margin-top: 80px;
-    margin-left: 11px;
+/* Menu toggle */
+#toggleButtonMenu{
+    width: 50px;
+    height: 50px;
+}
+
+#toggleMenu {
+    background-color: rgba(255, 255, 255, 0.8);
+    height: 50px;
+    width: 50px;
     border: none;
-    width: 30px;
-    height: 30px;
-    padding: none;
-}
-#mapButtons{
-    z-index: 1001;
 }
 
-#getCurrentLocation img {
-    width: 30px;
-    height: 30px;
+#toggleButtonMenuOptions button{
+    width: 150px;
+    height: 50px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border: none;
+    margin-bottom: 10px;
+    text-align: left;
+    padding-left: 20px;
 }
+
+#userAccountButton:hover{
+    color: rgba(31, 31, 31, 0.842);
+}
+
+#userFavouritesButton:hover{
+    color: red;
+}
+
+#userPinsButton:hover{
+    color: rgb(0, 195, 255);
+}
+
+#userBookmarksButton:hover{
+    color: rgb(255, 174, 0);
+}
+
+#toggleButtonMenuOptions button p{
+    font-size: 15px;
+    padding-left: 25px;
+    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+#toggleButtonMenuOptions{
+    width: 150px;
+}
+
+
 
 /* the div styling  for continer */
 #show_location_details {
@@ -71,16 +104,23 @@ html, body, #map {
     border: none;
 }
 
-.fa-bookmark {
+#show_marker_det_buttons .fa-book-bookmark {
     color: rgb(252, 151, 0);
 }
 
-.fa-heart {
+#show_marker_det_buttons .fa-heart {
     color: red;
 }
 
-.fa-map-location{
+#show_marker_det_buttons .fa-map-location{
     color: rgb(0, 153, 255);
+}
+
+#removeMarkersButton{
+    margin-right:70px;
+    margin-top: -40px;
+    width : 30px;
+    height: 30px;
 }
 
 #close_button{
@@ -131,4 +171,94 @@ html, body, #map {
 #addBookmarkFolder-buttons{
     width: 200px;
 }
+
+/* Display Bookmark Folders */
+
+#display_BookmarkFolders{
+    background-color: rgba(0, 0, 0, 0.3);
+    padding-top: 5vh;
+    padding-bottom: 5vh;
+    width: 101vw;
+    height: 103vh;
+    margin-left: -20px;
+    margin-bottom: -10px;
+    z-index: 1001;
+}
+
+#bFolder_continer{
+    background-color: white;
+    max-width: 80vw;
+    height: 90vh;
+    border-radius: 20px;
+    padding-right: 0em;
+    padding-left: 0em;
+}
+
+#bFolder_heading {
+    margin-left: 10px;
+    margin-bottom: none;
+}
+
+#close_BookmarkFolderDiaplay {
+    max-width: 50px;
+    margin-right: 30px;
+    border: none;
+    background-color: transparent;
+}
+
+#close_BookmarkFolderDiaplay i:hover {
+    color: rgb(241, 39, 39);
+}
+
+#add_BookmarkFolder{
+    max-width: 50px;
+    margin-right: 10px;
+    border: none;
+    background-color: transparent;
+    color: rgb(7, 134, 238);
+}
+
+#add_BookmarkFolder i:hover {
+    color: rgba(7, 134, 238, 0.596);
+}
+
+#bFolder_divider {
+    margin: 0em;
+}
+
+#folders {
+    background-color: transparent;
+    width: 100%;
+    height: 87%;
+    margin-left: 0.00001%;
+    overflow-x: auto;
+    margin-bottom: 0px;
+}
+
+#folders div {
+    background-color: lightgrey;
+    width: 20vw;
+    height: 100px;
+    margin-top: 20px;
+    margin-left: 20px;
+    min-width: 380px;
+    max-width: 300px;
+    border-radius: 20px;
+    padding: 10px;
+}
+
+#folders div button{
+    max-width: 40px;
+    background-color: rgba(255, 255, 255, 0);
+    border: none;
+}
+
+#folders div button .fa-trash-can{
+    color: rgb(255, 26, 26);
+}
+
+#folders div button .fa-trash-can:hover{
+    color: rgba(255, 26, 26, 0.562);
+}
+
 

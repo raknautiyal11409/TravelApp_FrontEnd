@@ -11,6 +11,8 @@ var showMarkerDetialOnMap = false;
 var marker = [];
 var removeSearchMarkerButton;
 var crossButtonIsOnMap = false;
+var toggleMenuExpanded = false;
+var expandedMenu;
 
 const map = L.map('map', {
     maxBounds: L.latLngBounds([90, -180], [-90, 180])
@@ -36,6 +38,73 @@ new L.cascadeButtons([
         map_init_basic(map, null);
      }},
 ], {position:'topleft', direction:'horizontal'}).addTo(map);
+
+// ----------------- add toggle menu ----------------------
+ L.control.custom({
+    position: 'topright',
+    id: 'toggleButtonMenu',
+    content :   '<button id="toggleMenu" class="rounded-circle">'+
+                   '<i class="fas fa-bars fa-xl"></i>'+
+               '</button>',
+    events:
+    {
+        click: function() {
+            $('#toggleMenu').html('<i class="fas fa-xmark fa-2xl"></i>');
+            if(!toggleMenuExpanded){ // check if alredy expanded
+                $('#toggleMenu').animate( // toggle animation
+                    { deg: 90 },
+                    {
+                        duration: 400,
+                        step: function(now) {
+                            $(this).css({ transform: 'rotate(' + now + 'deg)' });
+                        }
+                    }
+                );
+                expandToggleMenu();
+            } else {
+                $('#toggleMenu').animate(
+                    { deg: -0 },
+                    {
+                        duration: 400,
+                        step: function(now) {
+                            $(this).css({ transform: 'rotate(' + now + 'deg)' });
+                        }
+                    }
+                );
+                map.removeControl(expandedMenu);
+                $('#toggleMenu').html('<i class="fas fa-bars fa-xl"></i>');
+                toggleMenuExpanded = false;
+            }
+        },
+        
+    }
+}).addTo(map);
+
+// expanded toggle menu
+function expandToggleMenu() {
+    expandedMenu = L.control.custom({
+        position: 'topright',
+        id: 'toggleButtonMenuOptions',
+        content :   '<button id="userAccountButton" class="rounded-pill">'+
+                       '<i class="fas fa-user fa-xl"> <p> Account </p></i>'+
+                   '</button>'+
+                   '<button id="userFavouritesButton" class="rounded-pill">'+
+                       '<i class="fas fa-heart fa-xl"> <p> Favourites </p></i>'+
+                   '</button>'+
+                   '<button id="userBookmarksButton" class="rounded-pill">'+
+                       '<i class="fas fa-book-bookmark fa-xl"> <p> Bookmarks </p></i>'+
+                   '</button>'+
+                   '<button id="userPinsButton" class="rounded-pill">'+
+                       '<i class="fas fa-map-pin fa-xl"> <p> Pins </p></i>'+
+                   '</button>',
+    }).addTo(map);
+    toggleMenuExpanded = true
+
+    $('#userBookmarksButton').on('click', function() {
+        displayBookmarkFolders();
+    });
+}
+
   
 // -----------------  add search --------------------------
 
@@ -58,10 +127,11 @@ searchControl.on('search:results', function(data) {
 var results = L.layerGroup().addTo(map);
 
 
-
+// show the pointers on the map
 searchControl.on('results', function(data) {
     var searchResults = data.results;
-
+    
+    // remove pevious close button 
     if(crossButtonIsOnMap){
         map.removeControl(removeSearchMarkerButton);
         showMarkerDetialOnMap = false;
@@ -86,17 +156,11 @@ searchControl.on('results', function(data) {
 
     removeSearchMarkerButton = L.control.custom({
         position: 'topright',
+        id:'removeMarkersButton',
         content : 
                 '<button class="rounded-circle container-xs w-3 h-3" id="close_button" type="button">'+
                     '<i class="fas fa-xmark fa-2xl"></i>'+
                 '</button>',
-        style   :
-        {
-            'margin-right': '15px',
-            'margin-top': '15px',
-            width :' 30px',
-            height: '30px',
-        },
         classes: 'rounded-circle w-3 h-3',
         events:
         {
@@ -120,19 +184,19 @@ searchControl.on('results', function(data) {
     }).addTo(map);
     crossButtonIsOnMap = true;
 
+    // add markers to the map 
     for (var i = 0; i < searchResults.length; i++) {
         var markerName, markerLatLong, markerAddress;
         var result = searchResults[i];
         marker[i] = L.marker(result.latlng).addTo(map);
         markerName =  result.properties.PlaceName;
         markerAddress =  result.properties.LongLabel;
-        markerLatLong =  "Lat: " + result.latlng.lat.toFixed(5) + ", Lng: " + result.latlng.lng.toFixed(5);
+        markerLatLong =  " Lat: " + result.latlng.lat.toFixed(5) + ", Lng: " + result.latlng.lng.toFixed(5);
         marker[i].bindPopup("<span class='markerName'>"+ markerName +"</span><span class='markerAddress'>"+ markerAddress + "</span><span class='markerLatLong'>"+ markerLatLong +"</span>");
 
-        // get marker details
+        // get marker details and display in div
         marker[i].on('click', function(e) {
             var popupContent = e.target.getPopup().getContent();
-            // extract the specific content using plain JavaScript
             var parser = new DOMParser();
             var doc = parser.parseFromString(popupContent, "text/html");
             var mN = doc.querySelector('.markerName');
@@ -141,6 +205,8 @@ searchControl.on('results', function(data) {
             mN = mN.textContent;
             mA = mA.textContent;
             mLL = mLL.textContent;
+
+            // call function to add details to the div
             showMarkerDetials = showMarkerDetails(mN, mA, mLL);
         });
     }
@@ -372,6 +438,7 @@ function bookmarkFolderNameInput() {
     });
 }
 
+
 // Add folder to the database
 function addBoomarkFolder(folderName, nameInputBox) {
 
@@ -395,4 +462,51 @@ function addBoomarkFolder(folderName, nameInputBox) {
     } else{
         alert("Please fill in the name")
     }
+}
+
+// Function to dynamically show bookmark folders in a contianer
+function displayBookmarkFolders() {
+
+    
+
+    var bookmarkFolder_diaplay = L.control.custom({
+        position: 'bottomleft',
+        id: 'display_BookmarkFolders',
+        content : 
+        '<div id="bFolder_continer" class="container">'+
+          '<div class="row">'+
+            '<h2 id="bFolder_heading" class="col pt-2"> Bookmark Folders</h2>'+
+            '<button type="button" class="col pt-2" id="add_BookmarkFolder" >'+
+                '<i class="fas fa-folder-plus fa-xl"></i>'+
+            '</button>'+
+            '<button type="button" class="col pt-2" id="close_BookmarkFolderDiaplay" >'+
+              '<i class="fas fa-xmark fa-xl"></i>'+
+            '</button>'+
+          '</div>'+
+          '<hr id="bFolder_divider">'+
+          '<div id="folders" class="row justify-content-center" >'+
+          '</div>'+
+        '</div>',
+    }).addTo(map);
+
+    $('#close_BookmarkFolderDiaplay').on('click', function(){
+        map.removeControl(bookmarkFolder_diaplay);
+    });
+}
+
+function displayBooksmarks() {
+
+}
+
+function displayFavourites(){
+
+}
+
+function dispalyPins(){
+      
+}
+
+// Query databse
+function getUserBookmarkFolders() {
+    
 }
