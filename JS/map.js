@@ -414,8 +414,7 @@ function showMarkerDetails(name, address, marerkerCords) {
 
 // show form to input folder name
 function bookmarkFolderNameInput() {
-
-    var nameInputBox = L.control.custom({
+    var nameInputBox = L.control.custom({ 
         position: 'bottomleft',
         id: 'addBookmarkFolder-Name',
         content : '<form class="container">'+
@@ -467,7 +466,10 @@ function addBoomarkFolder(folderName, nameInputBox) {
 // Function to dynamically show bookmark folders in a contianer
 function displayBookmarkFolders() {
 
-    
+    if(showMarkerDetialOnMap){
+        map.removeControl(showMarkerDetial);
+        showMarkerDetialOnMap = false;
+    }
 
     var bookmarkFolder_diaplay = L.control.custom({
         position: 'bottomleft',
@@ -492,6 +494,10 @@ function displayBookmarkFolders() {
     $('#close_BookmarkFolderDiaplay').on('click', function(){
         map.removeControl(bookmarkFolder_diaplay);
     });
+
+    $('#add_BookmarkFolder').on('click', function(){
+        bookmarkFolderNameInput();
+    });
 }
 
 function displayBooksmarks() {
@@ -508,5 +514,5 @@ function dispalyPins(){
 
 // Query databse
 function getUserBookmarkFolders() {
-    
+
 }

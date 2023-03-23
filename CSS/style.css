@@ -141,10 +141,10 @@ html, body, #map {
     padding-top: 34vh;
     height:1000px;
     background-color: rgb(0, 0, 0,.2);
-    margin-top: -100px;
-    margin-bottom: -320px;
+    margin-top: 100px;
+    margin-bottom: -1000px;
     margin-left: -10px;
-    z-index: 1000;
+    z-index: 1002;
 }
 
 #addBookmarkFolder-Name form {
