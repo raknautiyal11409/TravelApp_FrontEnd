@@ -295,6 +295,11 @@ html, body, #map {
     padding-top: 5px;
 }
 
+#sbf_header h5{
+    padding-top:5px;
+    padding-top:5px;
+}
+
 #sbf_header button{
     margin-right: 20px;
     max-width: 50px;
@@ -317,6 +322,21 @@ html, body, #map {
     margin-bottom: 1vh;
     overflow-x: auto;
     overflow-y: unset;
+    padding-left: 2vw;
+}
+
+#sbf_form_inner div {
+    margin-bottom: 0.5vh;
+}
+
+#sbf_form_inner div input { /* Radio buttons*/
+    max-width: 30px;
+    font-size: 15px;
+}
+
+#sbf_form_inner div label { /* Radio buttons*/
+    padding-left: 0em;
+    font-size: 15px;
 }
 
 #sbf_cancel{

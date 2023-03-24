@@ -1,5 +1,6 @@
 // logout button
 var loginButton = document.getElementById("loginButton");
+var test = window.location.href ;
 
 $(document).ready(function() {
   verifyAccessToken();
@@ -58,6 +59,9 @@ $(document).ready(function() {
             },
             error: function(jqXHR, textStatus, errorThrown) {
               console.log('Error getting new token:', errorThrown);
+              if(window.location.href != "http://127.0.0.1:5501/login.html"){
+                window.location.replace("http://127.0.0.1:5501/login.html");
+              }
             }
           });
         } else {

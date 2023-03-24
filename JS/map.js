@@ -191,13 +191,15 @@ searchControl.on('results', function(data) {
 
     // add markers to the map 
     for (var i = 0; i < searchResults.length; i++) {
-        var markerName, markerLatLong, markerAddress;
+        var markerName, markerLatLong, markerAddress, mLat, mLng;
         var result = searchResults[i];
         marker[i] = L.marker(result.latlng).addTo(map);
         markerName =  result.properties.PlaceName;
         markerAddress =  result.properties.LongLabel;
         markerLatLong =  " Lat: " + result.latlng.lat.toFixed(5) + ", Lng: " + result.latlng.lng.toFixed(5);
-        marker[i].bindPopup("<span class='markerName'>"+ markerName +"</span><span class='markerAddress'>"+ markerAddress + "</span><span class='markerLatLong'>"+ markerLatLong +"</span>");
+        mLat = result.latlng.lat.toFixed(9);
+        mLng = result.latlng.lng.toFixed(9);
+        marker[i].bindPopup("<span class='markerName'>"+ markerName +"</span><span class='markerAddress'>"+ markerAddress + "</span><span class='markerLatLong'>"+ markerLatLong +"</span><span style='visibility:hidden' class='markerLat'>"+ mLat +"</span><span style='visibility:hidden' class='markerLong'>"+ mLng +"</span>");
 
         // get marker details and display in div
         marker[i].on('click', function(e) {
@@ -207,12 +209,16 @@ searchControl.on('results', function(data) {
             var mN = doc.querySelector('.markerName');
             var mLL = doc.querySelector('.markerLatLong');
             var mA = doc.querySelector('.markerAddress');
+            var lat =  doc.querySelector('.markerLat');
+            var lng =  doc.querySelector('.markerLong');
             mN = mN.textContent;
             mA = mA.textContent;
             mLL = mLL.textContent;
+            lat = lat.textContent;
+            lng = lng.textContent;
 
             // call function to add details to the div
-            showMarkerDetials = showMarkerDetails(mN, mA, mLL);
+            showMarkerDetials = showMarkerDetails(mN, mA, mLL, lat, lng);
         });
     }
 
@@ -369,7 +375,7 @@ map.on('contextmenu', function(e) {
 
 
 // -----------------  show marker details --------------------------
-function showMarkerDetails(name, address, marerkerCords) {
+function showMarkerDetails(name, address, marerkerCords, lat, lng) {
 
     if(showMarkerDetialOnMap){
         map.removeControl(showMarkerDetial);
@@ -408,7 +414,7 @@ function showMarkerDetails(name, address, marerkerCords) {
     }).addTo(map);
 
     $('#addBookmarkButton').on('click', function() {
-        displayBooksmarkFolders_OptionMenu();
+        displayBooksmarkFolders_OptionMenu( name, address, lat, lng );
     });
     
     showMarkerDetialOnMap = true;
@@ -494,6 +500,9 @@ function displayBookmarkFolders() {
         '</div>',
     }).addTo(map);
 
+    var folderNames = getUserBookmarkFolders();
+
+
     $('#close_BookmarkFolderDiaplay').on('click', function(){
         map.removeControl(bookmarkFolder_diaplay);
     });
@@ -503,7 +512,7 @@ function displayBookmarkFolders() {
     });
 }
 
-function displayBooksmarkFolders_OptionMenu() {
+function displayBooksmarkFolders_OptionMenu(name, address, lat, lng) {
     var folderOptionMenu = L.control.custom({ 
         position: 'bottomright',
         id: 'selectBookamrkFolder',
@@ -528,6 +537,40 @@ function displayBooksmarkFolders_OptionMenu() {
         
     }).addTo(map);
 
+    getUserBookmarkFolders(function(results_array) {
+        if(results_array.length != 0) {
+            for(var i=0; i< results_array.length; i++) {
+                $('#sbf_form_inner').append('<div class="row"><input class="col" type="radio" name="bookmarkFolder" value="'+results_array[i][1]+'">' + 
+                '<label class="col" for="html">'+results_array[i][0]+'</label><br></div>');
+            }
+        }
+
+        $('#sbf_addLocation').on('click', function(){
+            var selectedOption = $("input[name='bookmarkFolder']:checked").val();
+            $.ajax({
+                type: "POST",
+                headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
+                // contentType: "application/json",
+                url: HOST + "/api/add_location_to_folder/",
+                data: {
+                    location_name: name,
+                    address: address, 
+                    long: lng,
+                    lat: lat,
+                    folderID: selectedOption
+                },
+                success: function(data) {
+                    alert('Added Location Succesfully To ' + ' ' + 'folder');
+                    map.removeControl(folderOptionMenu);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log(errorThrown);
+                    alert('Error: FAILED to add Bookmark. Please try again!!!!');
+                },
+            });
+        });
+    });
+
     $('#sbf_cancel').on('click', function(){
         map.removeControl(folderOptionMenu);
     });
@@ -549,15 +592,23 @@ function dispalyPins(){
 // Query database
 
 // get folder names from the database
-function getUserBookmarkFolders() {
-    $.ajax({
+function getUserBookmarkFolders(callback) {
+    
+    var results_array = [];
+    return $.ajax({
         type: "POST",
         headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
         // contentType: "application/json",
         url: HOST + "/api/get_Folder_Names/",
         success: function(data) {
-            
-            alert('Successfully added folders');
+            data.forEach(function(objects){
+                var tempArr = [];
+                Object.keys(objects).forEach(function(key) {
+                    tempArr.push(objects[key]);
+                });
+                results_array.push(tempArr);
+            });
+            callback(results_array);
         },
         error: function(jqXHR, textStatus, errorThrown) {
             alert('Failed to load folders ');
