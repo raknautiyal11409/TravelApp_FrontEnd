@@ -3,9 +3,17 @@ body {
     margin: 0;
 }
 
+@media all and (max-width: 600px) 
+{
+    html, body, #map {
+        height: 100%;
+        width: 100vw;
+    }
+}
+
 html, body, #map {
     height: 100%;
-    width: 98.9vw;
+    width: 99.1vw;
 }
 
 /* Login Page */
@@ -79,7 +87,7 @@ html, body, #map {
     height: 100%;
     background-color: white;
     max-width: 33%;
-    min-width: 380px;
+    min-width: 310px;
     border-radius: 20px;
     padding: 10px;
     pointer-events: all;
@@ -137,7 +145,7 @@ html, body, #map {
 /* Bookmark Add Name Form */
 #addBookmarkFolder-Name {
     position: relative;
-    width: 100vw;
+    width: 103vw;
     padding-top: 34vh;
     height:1000px;
     background-color: rgb(0, 0, 0,.2);
@@ -178,9 +186,10 @@ html, body, #map {
     background-color: rgba(0, 0, 0, 0.3);
     padding-top: 5vh;
     padding-bottom: 5vh;
-    width: 101vw;
+    padding-left: 6vw;
+    width: 105vw;
     height: 103vh;
-    margin-left: -20px;
+    margin-left: -6vw;
     margin-bottom: -10px;
     z-index: 1001;
 }
@@ -261,4 +270,62 @@ html, body, #map {
     color: rgba(255, 26, 26, 0.562);
 }
 
+/* Select bookmark folder options menu*/
+#selectBookamrkFolder {
+    background-color: rgba(0, 0, 0, 0.466);
+    width: 103vw;
+    height: 103vh;
+    padding-top: 25vh;
+    padding-left: 3vw;
+    margin-bottom: -2vh;
+    margin-right: -3vw;
+}
 
+#selectBookamrkFolderInner{
+    background-color: white;
+    width: 33vw; 
+    max-width: 430px;
+    min-width: 250px; 
+    height: auto;
+    padding-bottom: 10px;
+    border-radius: 20px;
+}
+
+#sbf_header{
+    padding-top: 5px;
+}
+
+#sbf_header button{
+    margin-right: 20px;
+    max-width: 50px;
+    border: none;
+    background-color: transparent;
+}
+
+#sbf_header button i{
+    color: rgb(7, 134, 238);
+}
+
+#sbf_header button i:hover{
+    color: rgba(7, 134, 238, 0.596);
+}
+
+#sbf_form {
+    background-color: rgb(255, 252, 252);
+    max-height: 26vh;
+    height: 20vh;
+    margin-bottom: 1vh;
+    overflow-x: auto;
+    overflow-y: unset;
+}
+
+#sbf_cancel{
+    max-width: 150px;
+    margin-left: 2vw;
+    margin-right: 1vw;
+}
+
+#sbf_addLocation{
+    margin-left: 3vw;
+    margin-right: 2vw;
+}

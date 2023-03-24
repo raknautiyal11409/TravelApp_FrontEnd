@@ -49,25 +49,27 @@ new L.cascadeButtons([
     events:
     {
         click: function() {
-            expandCollapeToggleMenu();
+            expandCollapeToggleMenu(false);
         },
         
     }
 }).addTo(map);
 
-function expandCollapeToggleMenu() {
-    $('#toggleMenu').html('<i class="fas fa-xmark fa-2xl"></i>');
+function expandCollapeToggleMenu(menuConflict) {
     if(!toggleMenuExpanded){ // check if alredy expanded
-        $('#toggleMenu').animate( // toggle animation
-            { deg: 90 },
-            {
-                duration: 400,
-                step: function(now) {
-                    $(this).css({ transform: 'rotate(' + now + 'deg)' });
+        if(!menuConflict){
+            $('#toggleMenu').html('<i class="fas fa-xmark fa-2xl"></i>');
+            $('#toggleMenu').animate( // toggle animation
+                { deg: 90 },
+                {
+                    duration: 400,
+                    step: function(now) {
+                        $(this).css({ transform: 'rotate(' + now + 'deg)' });
+                    }
                 }
-            }
-        );
-        expandToggleMenu();
+            );
+            expandToggleMenu();
+        }
     } else {
         $('#toggleMenu').animate(
             { deg: -0 },
@@ -148,7 +150,7 @@ searchControl.on('results', function(data) {
         showMarkerDetialOnMap = false;
     }
     
-    expandCollapeToggleMenu();
+    expandCollapeToggleMenu(true);
 
     // remove existing markers
     for (var i = 0; i < marker.length; i++) {
@@ -406,7 +408,7 @@ function showMarkerDetails(name, address, marerkerCords) {
     }).addTo(map);
 
     $('#addBookmarkButton').on('click', function() {
-        bookmarkFolderNameInput();
+        displayBooksmarkFolders_OptionMenu();
     });
     
     showMarkerDetialOnMap = true;
@@ -501,7 +503,38 @@ function displayBookmarkFolders() {
     });
 }
 
-function displayBooksmarks() {
+function displayBooksmarkFolders_OptionMenu() {
+    var folderOptionMenu = L.control.custom({ 
+        position: 'bottomright',
+        id: 'selectBookamrkFolder',
+        content :
+        '<div class="container" id="selectBookamrkFolderInner">'+
+          '<div id="sbf_header" class="row">'+
+            '<h5 class="col">Select Folder</h5>'+
+            '<button id="sbf_addfolder_button" class="col">'+
+              '<i class="fas fa-folder-plus fa-xl"></i>'+
+            '</button>'+
+            '<hr>'+
+          '</div>'+
+          '<div id="sbf_form" class="row">'+
+            '<form id="sbf_form_inner">'+
+            '</form>'+
+          '</div>'+
+          '<div class="row"> '+
+            '<button id="sbf_cancel" class="col btn btn-danger rounded-3 "> Cancel </button>'+
+            '<button id="sbf_addLocation" class="col btn btn-primary rounded-3"> Add</button>'+
+          '</div>'+
+        '</div>',
+        
+    }).addTo(map);
+
+    $('#sbf_cancel').on('click', function(){
+        map.removeControl(folderOptionMenu);
+    });
+
+    $('#sbf_addfolder_button').on('click', function(){
+        bookmarkFolderNameInput();
+    });
 
 }
 
@@ -513,7 +546,21 @@ function dispalyPins(){
       
 }
 
-// Query databse
-function getUserBookmarkFolders() {
+// Query database
 
+// get folder names from the database
+function getUserBookmarkFolders() {
+    $.ajax({
+        type: "POST",
+        headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
+        // contentType: "application/json",
+        url: HOST + "/api/get_Folder_Names/",
+        success: function(data) {
+            
+            alert('Successfully added folders');
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert('Failed to load folders ');
+        },
+    });
 }
