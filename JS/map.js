@@ -13,6 +13,7 @@ var removeSearchMarkerButton;
 var crossButtonIsOnMap = false;
 var toggleMenuExpanded = false;
 var expandedMenu;
+var representLocationMarker
 
 const map = L.map('map', {
     maxBounds: L.latLngBounds([90, -180], [-90, 180])
@@ -110,6 +111,14 @@ function expandToggleMenu() {
     $('#userBookmarksButton').on('click', function() {
         displayBookmarkFolders();
     });
+
+    $('#userFavouritesButton').on('click', function() {
+        getlocations_pin_and_fav(false);
+    });
+
+    $('#userPinsButton').on('click', function() {
+        getlocations_pin_and_fav(true);
+    });
 }
 
   
@@ -137,12 +146,6 @@ searchControl.on('results', function(data) {
     // remove pevious close button 
     if(crossButtonIsOnMap){
         map.removeControl(removeSearchMarkerButton);
-        showMarkerDetialOnMap = false;
-    }
-    
-    if(showMarkerDetialOnMap){
-        map.removeControl(showMarkerDetial);
-        showMarkerDetialOnMap = false;
     }
 
     if(showMarkerDetialOnMap){
@@ -394,10 +397,10 @@ function showMarkerDetails(name, address, marerkerCords, lat, lng) {
                 '<button id="addBookmarkButton" class="col rounded-circle ms-2 me-2" type="button">'+
                     '<i class="fas fa-book-bookmark fa-xl"></i>'+
                 '</button>'+
-                '<button class="col rounded-circle me-2" type="button">'+
+                '<button id="addFavButton" class="col rounded-circle me-2" type="button">'+
                     '<i class="fas fa-heart fa-xl"></i>'+
                 '</button>'+
-                '<button class="col rounded-circle me-3" type="button">'+
+                '<button id="addPinButton" class="col rounded-circle me-3" type="button">'+
                     '<i class="fas fa-map-pin fa-xl"></i>'+
                 '</button>'+
                 '<button class="col rounded-pill ms-5" type="button">'+
@@ -416,6 +419,15 @@ function showMarkerDetails(name, address, marerkerCords, lat, lng) {
     $('#addBookmarkButton').on('click', function() {
         displayBooksmarkFolders_OptionMenu( name, address, lat, lng );
     });
+
+    $('#addPinButton').on('click', function() {
+        addLocationAs_pin_or_fav_toDB(true, name, address, lat, lng );
+    });
+
+    $('#addFavButton').on('click', function() {
+        addLocationAs_pin_or_fav_toDB(false, name, address, lat, lng );
+    });
+
     
     showMarkerDetialOnMap = true;
 }
@@ -462,6 +474,31 @@ function addBoomarkFolder(folderName, nameInputBox) {
             success: function(data) {
                 alert('Added Bookmark Folder Succesfully');
                 map.removeControl(nameInputBox);
+                getUserBookmarkFolders(function(results_array){
+                    if(results_array != null){
+                        $("#folders").text("");
+                        for(var i=0; i<results_array.length; i++){
+                            $("#folders").append('<div class="row border border-2 clickableFolder">'+
+                                    '<h5 class="col"><i class="fas fa-folder-closed"></i>'+results_array[i][0] +'</h5>'+
+                                    '<button type="button" class="col  deleteFolder" value="'+ results_array[i][1] +'"> <i class="fas fa-trash-can"></i> </button>'+
+                                    '<span style="visibility: hidden;">'+results_array[i][1] +'</span>'+
+                                '</div>' 
+                            );
+                        }
+
+                        $(".clickableFolder").on('click',function() {
+                            var folderID = $(this).find("span").text();
+                            alert(folderID);
+                        });
+
+                        $(".deleteFolder").on('click',function() {
+                            event.stopPropagation();
+                            var folderID = $(this).val();
+                            alert(folderID);
+                        });
+
+                    }
+                });
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 alert('FAILED to add Bookmark Folder ');
@@ -486,7 +523,7 @@ function displayBookmarkFolders() {
         content : 
         '<div id="bFolder_continer" class="container">'+
           '<div class="row">'+
-            '<h2 id="bFolder_heading" class="col pt-2"> Bookmark Folders</h2>'+
+            '<h2 id="bFolder_heading" class="col pt-2"> <i class="fas fa-folder-closed"></i> Bookmark Folders</h2>'+
             '<button type="button" class="col pt-2" id="add_BookmarkFolder" >'+
                 '<i class="fas fa-folder-plus fa-xl"></i>'+
             '</button>'+
@@ -500,7 +537,32 @@ function displayBookmarkFolders() {
         '</div>',
     }).addTo(map);
 
-    var folderNames = getUserBookmarkFolders();
+    getUserBookmarkFolders(function(results_array){
+        if(results_array != null){
+            for(var i=0; i<results_array.length; i++){
+                $("#folders").append('<div class="row border border-2 clickableFolder">'+
+                        '<h5 class="col"><i class="fas fa-folder-closed"></i>'+results_array[i][0] +'</h5>'+
+                        '<button type="button" class="col deleteFolder" value="'+ results_array[i][1] +'"> <i class="fas fa-trash-can"></i> </button>'+
+                        '<span style="visibility: hidden;">'+results_array[i][1] +'</span>'+
+                    '</div>' 
+                );
+            }
+
+            $(".clickableFolder").on('click',function() {
+                var folderID = $(this).find("span").text();
+                var folderName = $(this).find("h5").text();
+                map.removeControl(bookmarkFolder_diaplay);
+                getLocationsInFolder(folderID, folderName);
+            });
+
+            $(".deleteFolder").on('click',function() {
+                event.stopPropagation();
+                var folderID = $(this).val();
+                alert(folderID);
+            });
+        }
+    });
+
 
 
     $('#close_BookmarkFolderDiaplay').on('click', function(){
@@ -538,7 +600,7 @@ function displayBooksmarkFolders_OptionMenu(name, address, lat, lng) {
     }).addTo(map);
 
     getUserBookmarkFolders(function(results_array) {
-        if(results_array.length != 0) {
+        if(results_array != null) {
             for(var i=0; i< results_array.length; i++) {
                 $('#sbf_form_inner').append('<div class="row"><input class="col" type="radio" name="bookmarkFolder" value="'+results_array[i][1]+'">' + 
                 '<label class="col" for="html">'+results_array[i][0]+'</label><br></div>');
@@ -581,13 +643,100 @@ function displayBooksmarkFolders_OptionMenu(name, address, lat, lng) {
 
 }
 
-function displayFavourites(){
+
+// general display to display boomarked, pinned and saved locations 
+function generalDisplay(caller, data, extra){
+
+    var heading, icon, headingIcon;
+    
+    if(showMarkerDetialOnMap){
+        map.removeControl(showMarkerDetial);
+        showMarkerDetialOnMap = false;
+    }
+
+    if(caller == "bookmark") {
+        heading = extra;
+        icon = '<i class="fas fa-bookmark" style="color: rgb(255, 187, 0);"></i>';
+        headingIcon = '<i class="fas fa-folder-open"></i>';
+    } else if (caller == 'pins'){
+        heading = 'Pins';
+        headingIcon = '<i class="fas fa-thumbtack"></i>';
+        icon = '<i class="fas fa-map-pin" style="color: rgb(3, 253, 241);"></i>';
+    } else if (caller == 'fav') {
+        heading = 'Favourites';
+        icon = '<i class="fas fa-heart" style="color: rgb(255, 39, 39);"></i>';
+        headingIcon = '<i class="far fa-heart"></i>';
+    }else {
+        console.log('invalid option');
+        return 0;
+    }
+
+    var generalDisplay = L.control.custom({
+        position: 'bottomleft',
+        id: 'display_General',
+        content : 
+            '<div id="bFolder_continer" class="container">'+
+                '<div class="row">'+
+                '<h2 id="bFolder_heading" class="col pt-2"> ' + headingIcon + heading + '</h2>'+
+                '<button type="button" class="col pt-2" id="close_GeneralDisplay" >'+
+                    '<i class="fas fa-xmark fa-xl"></i>'+
+                '</button>'+
+                '</div>'+
+                '<hr id="bFolder_divider">'+
+                '<div id="locationBlocks" class="row justify-content-center" >'+
+                '</div>'+
+           ' </div>',
+    }).addTo(map);
+
+    if(data != null){
+        $('#locationBlocks').text('');
+        for(var i = 0; i<data.length; i++){
+            $('#locationBlocks').append('<div class="row border border-2 clickableLocation">'+
+            '<h5 class="col">'+icon + data[i][0]+'</h5>'+
+            '<button type="button" class="col deleteLocation"> <i class="fas fa-trash-can"></i> </button>'+
+            '<p class="row ms-1">'+ data[i][1]+'</p>'+
+            '<span style="visibility: hidden;" class="lng">'+ data[i][2]+'</span>'+
+            '<span style="visibility: hidden;" class="lat">'+ data[i][3]+'</span>'+
+            '<span style="visibility: hidden;" class="locName">'+ data[i][0]+'</span>'+
+            '</div>');
+        }
+
+        $(".clickableLocation").on('click',function() {
+            var loc_lat = $(this).find(".lng").text();
+            var loc_lng = $(this).find(".lat").text();
+            var loc_add = $(this).find("p").text();
+            var loc_name = $(this).find(".locName").text();
+            map.removeControl(generalDisplay);
+
+            var loc_latlng = L.latLng(parseFloat(loc_lng), parseFloat(loc_lat));
+            if(representLocationMarker) {
+                map.removeLayer(representLocationMarker);
+            }
+            representLocationMarker = L.marker(loc_latlng).addTo(map);
+            map.flyTo(loc_latlng, 16);
+            representLocationMarker.bindPopup("<span class='markerName'>" + loc_name + "</span><span class='markerAddress'>" + loc_add + " </span><span class='markerLatLong'>" + loc_latlng + "</span><span style='visibility:hidden' class='markerLat'>" + loc_lat + "</span><span style='visibility:hidden' class='markerLong'>"+ loc_lng +"</span>");
+            representLocationMarker.on('click', function(e){
+                e.target.getPopup();
+                // call function to add details to the div
+                showMarkerDetials = showMarkerDetails(loc_name, loc_add, loc_latlng, loc_lat, loc_lng);
+            })
+        });
+
+        $(".deleteLocation").on('click',function() {
+            event.stopPropagation();
+            alert(folderID);
+        });
+    }
+
+    
+
+    $('#close_GeneralDisplay').on('click', function() {
+        map.removeControl(generalDisplay);
+    });
+
 
 }
 
-function dispalyPins(){
-      
-}
 
 // Query database
 
@@ -595,7 +744,7 @@ function dispalyPins(){
 function getUserBookmarkFolders(callback) {
     
     var results_array = [];
-    return $.ajax({
+    $.ajax({
         type: "POST",
         headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
         // contentType: "application/json",
@@ -612,6 +761,93 @@ function getUserBookmarkFolders(callback) {
         },
         error: function(jqXHR, textStatus, errorThrown) {
             alert('Failed to load folders ');
+        },
+    });
+}
+
+// get locations in the folder 
+function getLocationsInFolder(foldreID, folderName){
+    var locations_array = [];
+    $.ajax({
+        type: "POST",
+        headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
+        // contentType: "application/json",
+        url: HOST + "/api/getLocationsInFolder/",
+        data: {
+            folderID:foldreID,
+        },
+        success: function(data) {
+            data.forEach(function(objects){
+                var tempArr = [];
+                Object.keys(objects).forEach(function(key) {
+                    tempArr.push(objects[key]);
+                });
+                locations_array.push(tempArr);
+            });
+            generalDisplay('bookmark', locations_array, folderName);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert('Failed to load folders ');
+        },
+    });
+}
+
+// function to add send request to backend to add pin or favroute location to map
+function addLocationAs_pin_or_fav_toDB(isPin, name, address, lat, lng ){
+    var endpoint = '/api/addFavouriteLocation/'
+    if(isPin){
+        endpoint = '/api/addPinLocation/'
+    }
+
+    $.ajax({
+        type: "POST",
+        headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
+        // contentType: "application/json",
+        url: HOST + endpoint,
+        data: {
+            location_name: name,
+            address: address, 
+            long: lng,
+            lat: lat
+        },
+        success: function(data) {
+            alert('Added Location Succesfully');
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log(errorThrown);
+            alert('Error: FAILED to add. Please try again!!!!');
+        },
+    });
+}
+
+function getlocations_pin_and_fav(isPin){
+    var endpoint = '/api/getFavs/';
+    var caller = 'fav';
+    if(isPin){
+        endpoint = '/api/getPins/';
+        caller = 'pins';
+    }
+
+    $.ajax({
+        type: "POST",
+        headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
+        // contentType: "application/json",
+        url: HOST + endpoint,
+        success: function(data) {
+            locations_array = []
+            data.forEach(function(objects){
+                var tempArr = [];
+                Object.keys(objects).forEach(function(key) {
+                    tempArr.push(objects[key]);
+                });
+                locations_array.push(tempArr);
+            });
+
+            generalDisplay(caller, locations_array, null);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log(errorThrown);
+            alert('Error: FAILED to retrieve locations. Please try again!!!!');
         },
     });
 }
