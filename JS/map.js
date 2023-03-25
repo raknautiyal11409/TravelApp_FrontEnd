@@ -724,11 +724,19 @@ function generalDisplay(caller, data, extra){
 
         $(".deleteLocation").on('click',function() {
             event.stopPropagation();
-            alert(folderID);
+            if(caller == 'pins'){
+                var loc_lat = $(this).closest('.clickableLocation').find('.lat').text();
+                var loc_long = $(this).closest('.clickableLocation').find('.lng').text();
+                removeLocation(true, loc_long, loc_lat, generalDisplay);
+            } else if(caller =='fav') {
+                var loc_lat = $(this).closest('.clickableLocation').find('.lat').text();
+                var loc_long = $(this).closest('.clickableLocation').find('.lng').text();
+                removeLocation(false, loc_long, loc_lat, generalDisplay);
+            } else if (caller == 'bookmark'){
+
+            }
         });
     }
-
-    
 
     $('#close_GeneralDisplay').on('click', function() {
         map.removeControl(generalDisplay);
@@ -820,6 +828,7 @@ function addLocationAs_pin_or_fav_toDB(isPin, name, address, lat, lng ){
     });
 }
 
+// function get location for favourites and pins from the backend
 function getlocations_pin_and_fav(isPin){
     var endpoint = '/api/getFavs/';
     var caller = 'fav';
@@ -850,4 +859,34 @@ function getlocations_pin_and_fav(isPin){
             alert('Error: FAILED to retrieve locations. Please try again!!!!');
         },
     });
+}
+
+// rremove bookmark 
+function removeLocation(isPin, lng, lat, display) {
+    var endpoint = '/api/removeFav/';
+
+    if(isPin){
+        endpoint= '/api/removePin/';
+    }
+    
+    $.ajax({
+        type: "POST",
+        headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
+        // contentType: "application/json",
+        url: HOST + endpoint,
+        data: {
+            long: lng,
+            lat: lat
+        },
+        success: function(data) {
+            alert('Removed marker successfully');
+            map.removeControl(display);
+            getlocations_pin_and_fav(isPin);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log(errorThrown);
+            alert('Error: FAILED to add. Please try again!!!!');
+        },
+    });
+    
 }
