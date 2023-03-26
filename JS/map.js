@@ -475,29 +475,7 @@ function addBoomarkFolder(folderName, nameInputBox) {
                 alert('Added Bookmark Folder Succesfully');
                 map.removeControl(nameInputBox);
                 getUserBookmarkFolders(function(results_array){
-                    if(results_array != null){
-                        $("#folders").text("");
-                        for(var i=0; i<results_array.length; i++){
-                            $("#folders").append('<div class="row border border-2 clickableFolder">'+
-                                    '<h5 class="col"><i class="fas fa-folder-closed"></i>'+results_array[i][0] +'</h5>'+
-                                    '<button type="button" class="col  deleteFolder" value="'+ results_array[i][1] +'"> <i class="fas fa-trash-can"></i> </button>'+
-                                    '<span style="visibility: hidden;">'+results_array[i][1] +'</span>'+
-                                '</div>' 
-                            );
-                        }
-
-                        $(".clickableFolder").on('click',function() {
-                            var folderID = $(this).find("span").text();
-                            alert(folderID);
-                        });
-
-                        $(".deleteFolder").on('click',function() {
-                            event.stopPropagation();
-                            var folderID = $(this).val();
-                            alert(folderID);
-                        });
-
-                    }
+                    dynamicallyReloadFolders(results_array, null);
                 });
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -538,29 +516,7 @@ function displayBookmarkFolders() {
     }).addTo(map);
 
     getUserBookmarkFolders(function(results_array){
-        if(results_array != null){
-            for(var i=0; i<results_array.length; i++){
-                $("#folders").append('<div class="row border border-2 clickableFolder">'+
-                        '<h5 class="col"><i class="fas fa-folder-closed"></i>'+results_array[i][0] +'</h5>'+
-                        '<button type="button" class="col deleteFolder" value="'+ results_array[i][1] +'"> <i class="fas fa-trash-can"></i> </button>'+
-                        '<span style="visibility: hidden;">'+results_array[i][1] +'</span>'+
-                    '</div>' 
-                );
-            }
-
-            $(".clickableFolder").on('click',function() {
-                var folderID = $(this).find("span").text();
-                var folderName = $(this).find("h5").text();
-                map.removeControl(bookmarkFolder_diaplay);
-                getLocationsInFolder(folderID, folderName);
-            });
-
-            $(".deleteFolder").on('click',function() {
-                event.stopPropagation();
-                var folderID = $(this).val();
-                alert(folderID);
-            });
-        }
+        dynamicallyReloadFolders(results_array, bookmarkFolder_diaplay);
     });
 
 
@@ -572,6 +528,38 @@ function displayBookmarkFolders() {
     $('#add_BookmarkFolder').on('click', function(){
         bookmarkFolderNameInput();
     });
+}
+
+// function reload the folders after a new folder has been added
+function dynamicallyReloadFolders(results_array, bookmarkFolder_diaplay){
+    if(results_array != null){
+        $("#folders").text('');
+        for(var i=0; i<results_array.length; i++){
+            $("#folders").append('<div class="row border border-2 clickableFolder">'+
+                    '<h5 class="col"><i class="fas fa-folder-closed"></i>'+results_array[i][0] +'</h5>'+
+                    '<button type="button" class="col deleteFolder" value="'+ results_array[i][1] +' "> <i class="fas fa-trash-can"></i> </button>'+
+                    '<span style="visibility: hidden;">'+results_array[i][1] +'</span>'+
+                '</div>' 
+            );
+        }
+
+        $(".clickableFolder").on('click',function() {
+            var folderID = $(this).find("span").text();
+            var folderName = $(this).find("h5").text();
+
+            if(bookmarkFolder_diaplay !=null){
+                map.removeControl(bookmarkFolder_diaplay);
+            }
+            getLocationsInFolder(folderID, folderName);
+        });
+
+        $(".deleteFolder").on('click',function() {
+            event.stopPropagation();
+            var folderID = $(this).val();
+            removeBookmarkFolder(folderID);
+            dynamicallyReloadFolders(results_array);
+        });
+    }
 }
 
 function displayBooksmarkFolders_OptionMenu(name, address, lat, lng) {
@@ -645,7 +633,7 @@ function displayBooksmarkFolders_OptionMenu(name, address, lat, lng) {
 
 
 // general display to display boomarked, pinned and saved locations 
-function generalDisplay(caller, data, extra){
+function generalDisplay(caller, data, extra, folderID){
 
     var heading, icon, headingIcon;
     
@@ -733,7 +721,9 @@ function generalDisplay(caller, data, extra){
                 var loc_long = $(this).closest('.clickableLocation').find('.lng').text();
                 removeLocation(false, loc_long, loc_lat, generalDisplay);
             } else if (caller == 'bookmark'){
-
+                var loc_lat = $(this).closest('.clickableLocation').find('.lat').text();
+                var loc_long = $(this).closest('.clickableLocation').find('.lng').text();
+                removeBookmark(folderID, loc_long, loc_lat, generalDisplay, extra);
             }
         });
     }
@@ -774,7 +764,7 @@ function getUserBookmarkFolders(callback) {
 }
 
 // get locations in the folder 
-function getLocationsInFolder(foldreID, folderName){
+function getLocationsInFolder(folderID, folderName){
     var locations_array = [];
     $.ajax({
         type: "POST",
@@ -782,7 +772,7 @@ function getLocationsInFolder(foldreID, folderName){
         // contentType: "application/json",
         url: HOST + "/api/getLocationsInFolder/",
         data: {
-            folderID:foldreID,
+            folderID:folderID,
         },
         success: function(data) {
             data.forEach(function(objects){
@@ -792,7 +782,7 @@ function getLocationsInFolder(foldreID, folderName){
                 });
                 locations_array.push(tempArr);
             });
-            generalDisplay('bookmark', locations_array, folderName);
+            generalDisplay('bookmark', locations_array, folderName, folderID);
         },
         error: function(jqXHR, textStatus, errorThrown) {
             alert('Failed to load folders ');
@@ -852,7 +842,7 @@ function getlocations_pin_and_fav(isPin){
                 locations_array.push(tempArr);
             });
 
-            generalDisplay(caller, locations_array, null);
+            generalDisplay(caller, locations_array, null, null);
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.log(errorThrown);
@@ -861,7 +851,7 @@ function getlocations_pin_and_fav(isPin){
     });
 }
 
-// rremove bookmark 
+// remove bookmark 
 function removeLocation(isPin, lng, lat, display) {
     var endpoint = '/api/removeFav/';
 
@@ -886,6 +876,59 @@ function removeLocation(isPin, lng, lat, display) {
         error: function(jqXHR, textStatus, errorThrown) {
             console.log(errorThrown);
             alert('Error: FAILED to add. Please try again!!!!');
+        },
+    });
+    
+}
+
+// remove bookmark from folder
+function removeBookmark(folderID, lng, lat, display, folderName) {
+    var endpoint = '/api/removeBookmark/';
+    
+    $.ajax({
+        type: "POST",
+        headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
+        // contentType: "application/json",
+        url: HOST + endpoint,
+        data: {
+            folderID: folderID,
+            long: lng,
+            lat: lat
+        },
+        success: function(data) {
+            alert('Removed marker successfully');
+            map.removeControl(display);
+            getLocationsInFolder(folderID, folderName);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log(errorThrown);
+            alert('Error: FAILED to remove bookmarked location. Please try again!!!!');
+        },
+    });
+    
+}
+
+// remove bookmark folder
+function removeBookmarkFolder(folderID) {
+    var endpoint = '/api/removeBookmarkFolder/';
+    
+    $.ajax({
+        type: "POST",
+        headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
+        // contentType: "application/json",
+        url: HOST + endpoint,
+        data: {
+            folderID: folderID
+        },
+        success: function(data) {
+            getUserBookmarkFolders(function(results_array){
+                dynamicallyReloadFolders(results_array, null);
+            });
+            alert('Removed folder successfully');
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log(errorThrown);
+            alert('Error: FAILED to remove folder. Please try again!!!!');
         },
     });
     
