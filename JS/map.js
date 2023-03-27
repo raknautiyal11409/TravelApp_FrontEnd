@@ -109,6 +109,9 @@ function expandToggleMenu() {
                    '</button>'+
                    '<button id="userPinsButton" class="rounded-pill">'+
                        '<i class="fas fa-map-pin fa-xl"> <p> Pins </p></i>'+
+                   '</button>'+
+                   '<button id="LogoutButton" class="rounded-pill">'+
+                       '<i class="fas fa-right-from-bracket fa-xl"> <p> Log Out </p></i>'+
                    '</button>',
     }).addTo(map);
     toggleMenuExpanded = true
@@ -123,6 +126,30 @@ function expandToggleMenu() {
 
     $('#userPinsButton').on('click', function() {
         getlocations_pin_and_fav(true);
+    });
+
+    // log out user and send request to blacklist refresh token
+    $('#LogoutButton').addEventListener("click", function() {
+        
+        
+        console.log("Logged out!");
+        $.ajax({
+            type: "POST",
+            url: "/logout/",
+            data: { refreshToken: localStorage.getItem('refresh_token') },
+            headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
+            success: function(response) {
+                // remove the tokens from local storage
+                window.localStorage.removeItem('refreshToken');
+                window.localStorage.removeItem('accessToken');
+
+                // redirect the user to the login page
+                window.location.replace("http://127.0.0.1:5501/login.html");
+            },
+            error: function(response) {
+                console.log(response);
+            }
+        });
     });
 }
 
@@ -148,6 +175,10 @@ var results = L.layerGroup().addTo(map);
 searchControl.on('results', function(data) {
     var searchResults = data.results;
     
+    if (locationMarker ) { // remove any previously added marker
+        map.removeLayer(locationMarker); 
+    }
+
     // remove pevious close button 
     if(crossButtonIsOnMap){
         map.removeControl(removeSearchMarkerButton);
@@ -356,6 +387,8 @@ map.on('click', function(e) {
     }
 });
 
+
+// add a marker on right click and use esri reverse geo coding to get the marker detials
 map.on('contextmenu', function(e) {
     
     if (locationMarker ) { // remove any previously added marker
@@ -373,13 +406,22 @@ map.on('contextmenu', function(e) {
         }
     }
 
-    // if(){ // refresh div
-    //     map.removeControl(showMarkerDetials);
-    // }
+    // esri reverse geoCoder
+    L.esri.Geocoding.reverseGeocode({
+        apikey: esriApiKey
+    }).latlng(e.latlng)
+    .run(function (error, res) {
+        if (error) {
+            return;
+        }
 
-    // Create a new marker at the clicked location
-    locationMarker = L.marker(e.latlng).addTo(map);
-  });
+        locationMarker =  L.marker(res.latlng).addTo(map);
+        locationMarker.bindPopup(res.address.Match_addr).openPopup();
+        locationMarker.on('click', function(){
+            showMarkerDetails(res.address.PlaceName, res.address.LongLabel, res.latlng, res.latlng.lat, res.latlng.lng);
+        });
+    });
+});
 
 
 

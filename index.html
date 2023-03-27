@@ -47,48 +47,30 @@
     <link rel="stylesheet" href="node_modules\esri-leaflet-geocoder\dist\esri-leaflet-geocoder.css">
     <script src="node_modules\esri-leaflet-geocoder\dist\esri-leaflet-geocoder.js"></script>
 
+    <!-- Add leaflet routing machine -->
+    <link rel="stylesheet" href="node_modules\leaflet-routing-machine\dist\leaflet-routing-machine.css">
+    <script src="node_modules\leaflet-routing-machine\dist\leaflet-routing-machine.min.js"></script>
+
+    <!-- Add search control -->
+    <link rel="stylesheet" href="node_modules\leaflet-control-geocoder\dist\Control.Geocoder.css">
+    <script src="node_modules\leaflet-control-geocoder\dist\Control.Geocoder.js"></script>
+
+    <!-- Add leaflet.awsome markers -->
+    <link rel="stylesheet" href="node_modules\leaflet.awesome-markers\dist\leaflet.awesome-markers.css">
+    <script src="node_modules\leaflet.awesome-markers\dist\leaflet.awesome-markers.js"></script>
+
+
   </head>
   <body>
     <div id="data"></div>
 
-    <!-- add search bar for search the map -->
-    <!-- <div id="SearchBar">
-      <div class="d-flex align-items-center justify-content-center flex-column gap-4">
-        <form class="d-flex" id="searchForm">
-          <input id="searchValue" class="form-control me-1" type="search" placeholder="Search" aria-label="Search">
-          <button id="searchButton" type="button" class="btn btn-primary">Search</button>
-        </form>
-      </div>
-    </div> -->
-
     <!-- Add leaflet map to the page -->
     <div id="map"></div>
-
-    <div id="toggleButtonMenu">
-      <button id="toggleMenu" class="rounded-circle">
-        <i class="fas fa-book-bookmark fa-xl"></i>
-      </button>
-    </div>
-
-
-    <!-- Log out button -->
-    <button id="loginButton">Log Out</button>
-
-
-    <script src='//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
-    
-    <!-- Leaflet  -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js"></script>
-
-    <!-- Open source routing macine -->
-    <script src="node_modules\@fleetbase\leaflet-routing-machine\dist\@fleetbase\leaflet-routing-machine.min.js"></script>
-  
-    <!-- Geoapify + Leaflet: Address Search Plugin -->
-    <script src="node_modules\@geoapify\leaflet-address-search-plugin\dist\L.Control.GeoapifyAddressSearch.min.js"></script>
  
     <!-- Import JS files -->
     <script src="JS/script.js"></script>
     <script src="JS/map.js"></script>
+    <script src="JS/routing.js"></script>
     
    </body>
 </html>

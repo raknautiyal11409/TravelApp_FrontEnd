@@ -1,5 +1,3 @@
-// logout button
-var loginButton = document.getElementById("loginButton");
 var test = window.location.href ;
 
 $(document).ready(function() {
@@ -77,13 +75,6 @@ $(document).ready(function() {
   function getCurrentURL () {
     return window.location.href
   }
-
-  loginButton.addEventListener("click", function() {
-    window.localStorage.removeItem('refreshToken');
-    window.localStorage.removeItem('accessToken');
-    window.location.replace("http://127.0.0.1:5501/login.html");
-    console.log("Button clicked!");
-  });
 
 
 });
