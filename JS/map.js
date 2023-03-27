@@ -13,7 +13,8 @@ var removeSearchMarkerButton;
 var crossButtonIsOnMap = false;
 var toggleMenuExpanded = false;
 var expandedMenu;
-var representLocationMarker
+var representLocationMarker;
+var toggleMenuButton;
 
 const map = L.map('map', {
     maxBounds: L.latLngBounds([90, -180], [-90, 180])
@@ -25,7 +26,7 @@ const esriApiKey = 'AAPKe4688fca2b1c4405981a6518c0c88dcd4jIDDrgcGBJWw0ZxlKpyA6OA
 const basemapEnum = "ArcGIS:Navigation";
 
 // example using an Esri Basemap Styles API name
-L.esri.Vector.vectorBasemapLayer("ArcGIS:Streets", {
+L.esri.Vector.vectorBasemapLayer("ArcGIS:Navigation", {
     // provide either `apikey` or `token`
     apikey: esriApiKey
   }).addTo(map);
@@ -41,20 +42,24 @@ new L.cascadeButtons([
 ], {position:'topleft', direction:'horizontal'}).addTo(map);
 
 // ----------------- add toggle menu ----------------------
- L.control.custom({
-    position: 'topright',
-    id: 'toggleButtonMenu',
-    content :   '<button id="toggleMenu" class="rounded-circle">'+
-                   '<i class="fas fa-bars fa-xl"></i>'+
-               '</button>',
-    events:
-    {
-        click: function() {
-            expandCollapeToggleMenu(false);
-        },
-        
-    }
-}).addTo(map);
+function addToggleMenuButton() {
+    toggleMenuButton = L.control.custom({
+        position: 'topright',
+        id: 'toggleButtonMenu',
+        content :   '<button id="toggleMenu" class="rounded-circle">'+
+                    '<i class="fas fa-bars fa-xl"></i>'+
+                '</button>',
+        events:
+        {
+            click: function() {
+                expandCollapeToggleMenu(false);
+            },
+            
+        }
+    }).addTo(map);
+    return toggleMenuButton;
+}
+addToggleMenuButton();
 
 function expandCollapeToggleMenu(menuConflict) {
     if(!toggleMenuExpanded){ // check if alredy expanded
@@ -162,6 +167,7 @@ searchControl.on('results', function(data) {
         }
     }
 
+    // remove search result markers from the page 
     removeSearchMarkerButton = L.control.custom({
         position: 'topright',
         id:'removeMarkersButton',
@@ -403,7 +409,7 @@ function showMarkerDetails(name, address, marerkerCords, lat, lng) {
                 '<button id="addPinButton" class="col rounded-circle me-3" type="button">'+
                     '<i class="fas fa-map-pin fa-xl"></i>'+
                 '</button>'+
-                '<button class="col rounded-pill ms-5" type="button">'+
+                '<button id="navigateToLocation" class="col rounded-pill ms-5" type="button">'+
                     '<i class="fas fa-map-location fa-xl"></i>'+
                 '</button>'+
                 '</div>'+
@@ -427,6 +433,11 @@ function showMarkerDetails(name, address, marerkerCords, lat, lng) {
     $('#addFavButton').on('click', function() {
         addLocationAs_pin_or_fav_toDB(false, name, address, lat, lng );
     });
+
+    $('#navigateToLocation').on('click', function() {
+        showRoute(L.latLng(lat,lng));
+    });
+
 
     
     showMarkerDetialOnMap = true;

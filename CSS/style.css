@@ -82,7 +82,7 @@ html, body, #map {
 }
 
 /* show marker detials */
-#show_marker_det {
+#show_marker_det, #show_instructionsSteps{
     max-height: 170px;
     height: 100%;
     background-color: white;
@@ -383,4 +383,26 @@ html, body, #map {
 /* General display */
 #display_General h2 i {
     margin-right: 10px;
+}
+
+/* ---------------------- Routing ----------------------*/
+
+#routingfForm {
+    height: 170px;
+}
+
+#routingfForm #show_instructionsSteps {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    width: fit-content;
+    padding: 20px;
+}
+
+.leaflet-routing-container{
+    max-height: 37vh;
+    min-height: 25vh;
+    overflow-y: auto;
+    overflow-x: inherit;
+    border-radius: 20px;
+    padding: 10px;
 }
