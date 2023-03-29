@@ -986,3 +986,4 @@ function removeBookmarkFolder(folderID) {
     });
     
 }
+

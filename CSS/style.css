@@ -398,11 +398,28 @@ html, body, #map {
     padding: 20px;
 }
 
-.leaflet-routing-container{
+.itenary-for-routing_contrainer{
     max-height: 37vh;
-    min-height: 25vh;
+    min-height: 5vh;
+    min-width: 4vw;
     overflow-y: auto;
-    overflow-x: inherit;
+    overflow-x: hidden;
     border-radius: 20px;
-    padding: 10px;
+    padding: 2%;
+    padding-right: 4px;
+    margin-left: 5vw;
 }
+
+.itenary-for-navigation_contrainer{
+    border-radius: 20px;
+    max-height: 20vh;
+    max-width: 86vw;
+    min-height: 40px;
+    min-width: 40px;
+    overflow: hidden;
+}
+
+.leaflet-routing-alternatives-container .itenary-for-navigation_alt {
+    overflow-y: hidden;
+}
+
