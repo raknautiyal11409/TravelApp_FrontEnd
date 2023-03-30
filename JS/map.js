@@ -129,7 +129,7 @@ function expandToggleMenu() {
     });
 
     // log out user and send request to blacklist refresh token
-    $('#LogoutButton').addEventListener("click", function() {
+    $('#LogoutButton').on("click", function() {
         
         
         console.log("Logged out!");
@@ -179,11 +179,6 @@ searchControl.on('results', function(data) {
         map.removeLayer(locationMarker); 
     }
 
-    // remove pevious close button 
-    if(crossButtonIsOnMap){
-        map.removeControl(removeSearchMarkerButton);
-    }
-
     if(showMarkerDetialOnMap){
         map.removeControl(showMarkerDetial);
         showMarkerDetialOnMap = false;
@@ -197,37 +192,6 @@ searchControl.on('results', function(data) {
             map.removeLayer(marker[i]);
         }
     }
-
-    // remove search result markers from the page 
-    removeSearchMarkerButton = L.control.custom({
-        position: 'topright',
-        id:'removeMarkersButton',
-        content : 
-                '<button class="rounded-circle container-xs w-3 h-3" id="close_button" type="button">'+
-                    '<i class="fas fa-xmark fa-2xl"></i>'+
-                '</button>',
-        classes: 'rounded-circle w-3 h-3',
-        events:
-        {
-            click: function() {
-                // remove existing markers
-                for (var i = 0; i < marker.length; i++) {
-                    if(marker[i]){
-                        map.removeLayer(marker[i]);
-                    }
-                }
-
-                map.removeControl(removeSearchMarkerButton);
-
-                if(showMarkerDetialOnMap){
-                    map.removeControl(showMarkerDetial);
-                    showMarkerDetialOnMap = false;
-                }
-            },
-            
-        }
-    }).addTo(map);
-    crossButtonIsOnMap = true;
 
     // add markers to the map 
     for (var i = 0; i < searchResults.length; i++) {
@@ -374,16 +338,32 @@ function showPoiMarkers() {
 // Add a click event listener to the map
 map.on('click', function(e) {
 
-
-    if (locationMarker ) { // remove any previously added marker
+    // remove any previously added marker
+    if (locationMarker ) { 
         map.removeLayer(locationMarker); 
     }
-    if (results ) { // remove any previously added marker
+
+    // remove any previously added marker
+    if (results ) { 
         results.clearLayers();
     }
+
+    // remove marker detail menu
     if(showMarkerDetialOnMap){
         map.removeControl(showMarkerDetial);
         showMarkerDetialOnMap = false;
+    }
+
+    // remove existing markers
+    for (var i = 0; i < marker.length; i++) {
+        if(marker[i]){
+            map.removeLayer(marker[i]);
+        }
+    }
+
+    // remove saved markers
+    if(representLocationMarker) {
+        map.removeLayer(representLocationMarker);
     }
 });
 
@@ -461,6 +441,7 @@ function showMarkerDetails(name, address, marerkerCords, lat, lng) {
             height : '170px',
             'pointer-events': 'none',
             'margin-left': '10px',  
+            'overflow-y': 'auto',
         },
     }).addTo(map);
 
@@ -479,8 +460,6 @@ function showMarkerDetails(name, address, marerkerCords, lat, lng) {
     $('#navigateToLocation').on('click', function() {
         showRoute(L.latLng(lat,lng));
     });
-
-
     
     showMarkerDetialOnMap = true;
 }
@@ -748,21 +727,30 @@ function generalDisplay(caller, data, extra, folderID){
             var loc_add = $(this).find("p").text();
             var loc_name = $(this).find(".locName").text();
             map.removeControl(generalDisplay);
+            
+            // remove pinned location on map
+            if(locationMarker){
+                map.removeLayer(locationMarker);
+            }
 
             var loc_latlng = L.latLng(parseFloat(loc_lng), parseFloat(loc_lat));
+
+            // remove previous marker
             if(representLocationMarker) {
                 map.removeLayer(representLocationMarker);
             }
+
             representLocationMarker = L.marker(loc_latlng).addTo(map);
             map.flyTo(loc_latlng, 16);
             representLocationMarker.bindPopup("<span class='markerName'>" + loc_name + "</span><span class='markerAddress'>" + loc_add + " </span><span class='markerLatLong'>" + loc_latlng + "</span><span style='visibility:hidden' class='markerLat'>" + loc_lat + "</span><span style='visibility:hidden' class='markerLong'>"+ loc_lng +"</span>");
             representLocationMarker.on('click', function(e){
                 e.target.getPopup();
                 // call function to add details to the div
-                showMarkerDetials = showMarkerDetails(loc_name, loc_add, loc_latlng, loc_lat, loc_lng);
+                showMarkerDetials = showMarkerDetails(loc_name, loc_add, loc_latlng, loc_lng, loc_lat);
             })
         });
 
+        // call nesscessary functions to delete store loaction
         $(".deleteLocation").on('click',function() {
             event.stopPropagation();
             if(caller == 'pins'){
