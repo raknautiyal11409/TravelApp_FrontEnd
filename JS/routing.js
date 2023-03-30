@@ -2,6 +2,7 @@ var formOnPage = false;
 var navigationOff;
 var plannerRouter = false;
 var routingControl;
+var routingControlNavigation
 
 // get route from current location (Main Roting and Navigation function)
 function showRoute(destination) {
@@ -129,10 +130,11 @@ function showRoute(destination) {
 
             map.setView(coordsOnRouteArray[1],18);
 
-            
+            // add display for vicinity search results
+            vicSearchDisplay(routingControlNavigation)
 
             // add second routing machine for navigation 
-            var routingControlNavigation = L.Routing.control({
+            routingControlNavigation = L.Routing.control({
                 createMarker: function(i, waypoint) {
                     if (i === 0) {
                         return null;
@@ -208,28 +210,24 @@ function testNavigation(coordsOnRouteArray, routingControl) {
         if(!navigationOff){
             var timeout = setTimeout(function() {
                 if(!navigationOff){
-                    console.log(coordsOnRouteArray[i]);
+                    // Another way to make gps work
                     // map.setView(coordsOnRouteArray[i],20);
                     // routingControl.spliceWaypoints(0, 1, coordsOnRouteArray[i]);
 
-                    // // setmarker angle
-                    // if (i>0) {
-                    //     var previousPoint = L.latLng(coordsOnRouteArray[i-1].lat, coordsOnRouteArray[i-1].lng);
-                    //     var currentPoint = L.latLng(coordsOnRouteArray[i].lat, coordsOnRouteArray[i].lng);
-                    //     var travelAngel = L.GeometryUtil.bearing(previousPoint, currentPoint);
-                    // }
 
                     map.setView(coordsOnRouteArray[i], map.getZoom(), {'animate' : true, "pan": {
                         "duration": 10
                     }});
 
-                    navigationMarker.setLatLng(coordsOnRouteArray[i]);
-                    var waypoints = routingControl.getWaypoints();
+                    navigationMarker.setLatLng(coordsOnRouteArray[i]); // make marker move with location
+
+                    // update the route
+                    var waypoints = routingControlNavigation.getWaypoints();
                     waypoints[0] = coordsOnRouteArray[i];
-                    routingControl.setWaypoints(waypoints);
+                    routingControlNavigation.setWaypoints(waypoints);
 
                     if(i==1){
-                        // vicinitySearch(coordsOnRouteArray[i]);
+                        vicinitySearch(coordsOnRouteArray[i]);
                     }
                 }else{
                     if(navigationMarker){
@@ -257,16 +255,80 @@ function testNavigation(coordsOnRouteArray, routingControl) {
 }
 
 function vicinitySearch(currentLocation) {
+    var bounds = searchRadiusB_Box(currentLocation);
+    L.esri.Geocoding.geocode({apikey: esriApiKey}).text('Cafe').within(bounds).run(function (err, response) {
+        if (err) {
+        console.log(err);
+        return;
+        }
+        console.log(response);
+        show_VicinitySearch_results(response);
+    }); 
+}
 
-    // console.log('hello');
-    // var bounds = searchRadiusB_Box(currentLocation);
-    // L.esri.Geocoding.geocode({apikey: esriApiKey}).text('Cafe AND Pub').within(bounds).run(function (err, response) {
-    //     if (err) {
-    //     console.log(err);
-    //     return;
-    //     }
-    //     console.log(response);
-    // }); 
+// add a display for vicinity search results
+function vicSearchDisplay(){
+    // add add buttons for navigation system
+    var navigationControl = L.control.custom({
+        position: 'topleft',
+        id: 'vicintiyResults',
+        content :   '<button id="open_resultsButton">100</button>'+
+        '<div id="vicintiyResultsOpen" style="display: none">'+
+          '<div id="vicintiyResultsDynamicCont">'+
+          '</div>'+
+          '<hr>'+
+          '<button type="button" class="btn btn-danger" id="vicSearchCloseButton"> CLOSE </button>'+
+        '</div>',
+    }).addTo(map);
+
+    // show the results on click
+    $('#open_resultsButton').on('click', function(){
+        $('#open_resultsButton').css('display', 'none');
+        $('#vicintiyResultsOpen').css('display', 'block');
+        $('#navigation-control').css('display', 'none');
+    });
+
+    // back to button on click
+    $('#vicSearchCloseButton').on('click', function(){
+        $('#open_resultsButton').css('display', 'block');
+        $('#vicintiyResultsOpen').css('display', 'none');
+        $('#navigation-control').css('display', 'block');
+    });
+
+}
+
+// loop though to show seach results
+function show_VicinitySearch_results(results) {
+
+    var numberOfResults = results.results.length;
+
+    $('#open_resultsButton').text(numberOfResults);
+
+    if(numberOfResults>0){
+        $('#vicintiyResultsDynamicCont').text('');
+
+        for(var i=0; i < numberOfResults; i++ ){
+            $('#vicintiyResultsDynamicCont').append('<div class="row vicintyResults rounded-pill mt-2" >'+
+            '<h6 class="col ms-4">'+ results.results[i].properties.PlaceName +'</h6>'+
+            '<button class="col rounded-pill addStopButton"  value="'+ [results.results[i].latlng.lat, results.results[i].latlng.lng] +'">ADD STOP</button>'+
+            '<p class="row ms-2">'+ results.results[i].properties.LongLabel +'</p>'+
+            '</div>');
+        }
+
+        $('.addStopButton').on('click', function(){
+            var latlng = $(this).val();
+            var latlngArray = latlng.split(",");
+            var newlatlng = L.latLng(latlngArray[0],latlngArray[1]);
+            routingControlNavigation.spliceWaypoints(1, 0, newlatlng);
+
+            // get back to normal navigation screen
+            $('#open_resultsButton').css('display', 'block');
+            $('#vicintiyResultsOpen').css('display', 'none');
+            $('#navigation-control').css('display', 'block');
+        });
+         
+    }
+
 }
 
 // get a bounding box for the search radius
@@ -281,6 +343,7 @@ function searchRadiusB_Box(currentUserLocation){
 
 }
 
+// add UI while nvigating
 function navigationPannelSearchInterface (routingMachine) {
     // add add buttons for navigation system
     var navigationControl = L.control.custom({
@@ -420,7 +483,7 @@ function navigationPannelSearchInterface (routingMachine) {
 
 }
 
-
+// close button to cancle navigation planner
 function closeNavigationButton(){
     // remove search result markers from the page 
     removeSearchMarkerButton = L.control.custom({

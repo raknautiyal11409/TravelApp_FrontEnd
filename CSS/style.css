@@ -489,3 +489,61 @@ html, body, #map {
 .vicinityOptionInput_div {
     margin-right: 0em;
 }
+
+/* Vicinity Search Results */
+#viscintiyResults {
+    background-color: transparent;
+}
+
+#open_resultsButton {
+    border: none;
+    height: 70px;
+    width: 40px;
+    border-radius: 40px;
+    background-color: white;
+    color: orange;
+    font-weight: 1000;
+    margin-top: 50px;
+    border: 2px solid orange;
+}
+
+#vicintiyResultsOpen{
+    background-color: white;
+    margin-top: 8vh;
+    border-radius: 20px;
+    padding-right: 6vw;
+    padding-left: 6vw;
+    padding-top: 2vh;
+    padding-bottom: 2vh;
+    width: min-content;
+}
+
+#vicintiyResultsDynamicCont{
+    max-height: 57vh;
+    overflow-y: auto;
+    width: max-content;
+    overflow-x: hidden;
+    padding-left: 3vw;
+    padding-right: 3vw;
+}
+
+.vicintyResults {
+    max-width: 310px;
+    margin-left: 4vw;
+    margin-right: 4vw;
+    margin-top: 10px;
+    padding-top: 2vh;
+    border: 2px solid black;
+}
+
+.vicintyResults button{
+    max-width: 120px;
+    background-color: orange;
+    border: none;
+    height: 40px;
+    margin-right: 7vw;
+}
+
+.vicintyResults {
+    display: hiddens;
+}
