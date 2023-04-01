@@ -15,11 +15,27 @@ var toggleMenuExpanded = false;
 var expandedMenu;
 var representLocationMarker;
 var toggleMenuButton;
+var pinsCluster;
+
+//create and icon to display the search results
+var LeafIcon = L.Icon.extend({
+    options: {
+       iconSize:     [38, 95],
+       shadowSize:   [50, 64],
+       iconAnchor:   [22, 94],
+       shadowAnchor: [4, 62],
+       popupAnchor:  [-3, -76]
+    }
+});
 
 const map = L.map('map', {
-    maxBounds: L.latLngBounds([90, -180], [-90, 180])
+    maxBounds: L.latLngBounds([90, -180], [-90, 180]),
+    maxZoom: 16,
 }).fitWorld();
 var searchMarkers= [];
+
+// Mapboc API key
+const MapboxAPIkey = 'pk.eyJ1IjoicmFrMTQwOSIsImEiOiJjbGZoYmx2ZTUzaGN0M3lwY2g5aGJwNG9wIn0.OfdLIA8gsn7riXEMGI-OMg'
 
 // Esri API
 const esriApiKey = 'AAPKe4688fca2b1c4405981a6518c0c88dcd4jIDDrgcGBJWw0ZxlKpyA6OAqsPzALckDhsqhpE-1y9YWu-PsVTzkgYC445HlTZv'
@@ -34,11 +50,50 @@ L.esri.Vector.vectorBasemapLayer("ArcGIS:Navigation", {
 // set the minimum zoom level to 5
 map.setMinZoom(3);
 
+// pan to current location 
+var locateControl = L.control.locate({
+    position: "topleft",
+    follow: true,
+    setView: true,
+    flyTo: true,
+    drawCircle: true,
+    keepCurrentZoomLevel: false,
+    markerStyle: {
+      weight: 1,
+      opacity: 0.8,
+      fillOpacity: 0.8
+    },
+    circleStyle: {
+      weight: 1,
+      clickable: false
+    },
+    icon: "fas fa-location-arrow",
+    metric: false,
+    strings: {
+      title: "Show me where I am",
+      popup: "You are within {distance} {unit} from this point",
+      outsideMapBoundsMsg: "You seem located outside the boundaries of the map"
+    },
+    locateOptions: {
+      maxZoom: 15,
+      watch: true,
+      enableHighAccuracy: true,
+      maximumAge: 10000,
+      timeout: 10000
+    }
+}).addTo(map);
+
 // button to fly to current location 
 new L.cascadeButtons([
     {icon:"fas fa-location-crosshairs" , ignoreActiveState:true , command: () =>{
         map_init_basic(map, null);
      }},
+], {position:'topleft', direction:'horizontal'}).addTo(map);
+
+var pinButton = new L.cascadeButtons([
+    {icon:"fas fa-map-pin" , ignoreActiveState:true , command: () =>{
+        displayPinsOnMap();
+    }},
 ], {position:'topleft', direction:'horizontal'}).addTo(map);
 
 // ----------------- add toggle menu ----------------------
@@ -135,8 +190,8 @@ function expandToggleMenu() {
         console.log("Logged out!");
         $.ajax({
             type: "POST",
-            url: "/logout/",
-            data: { refreshToken: localStorage.getItem('refresh_token') },
+            url: HOST + "/api/logout/",
+            data: { refreshToken: localStorage.getItem('refreshToken') },
             headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
             success: function(response) {
                 // remove the tokens from local storage
@@ -975,3 +1030,35 @@ function removeBookmarkFolder(folderID) {
     
 }
 
+// function to display pin on the map
+function displayPinsOnMap() {
+    $.ajax({
+        type: "POST",
+        headers: {"Authorization": 'Bearer ' + localStorage.getItem('accessToken')},
+        // contentType: "application/json",
+        url: HOST + '/api/getPins/',
+        success: function(data) {
+            if(!pinsCluster){
+                pinsCluster = L.markerClusterGroup();
+
+                data.forEach(function(pin){
+                    var pinMarker = L.marker([pin.lat, pin.lng]); 
+                    pinMarker.bindPopup(pin.name +' \n '+ pin.address);
+                    pinsCluster.addLayer(pinMarker);
+                    
+                });
+                
+                map.addLayer(pinsCluster);
+            } else{
+                map.removeLayer(pinsCluster);
+                pinsCluster = false;
+            }
+
+            
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log(errorThrown);
+            alert('Error: FAILED to retrieve locations. Please try again!!!!');
+        },
+    });
+}

@@ -3,22 +3,26 @@ body {
     margin: 0;
 }
 
-@media all and (max-width: 600px) 
-{
-    html, body, #map {
-        height: 100%;
-        width: 100vw;
-    }
-}
-
-html, body, #map {
+#map, html, body{
     height: 100%;
     width: 99.1vw;
 }
 
 /* Login Page */
+#login-fromContent{
+    max-width: 700px;
+    margin-top: 20vh;
+    padding-left: 4vw;
+    padding-right: 4vw;
+    background-color: rgb(0, 202, 125);
+    border-radius: 20px;
+}
+
 #login-form {
-    max-width: 500px;
+    padding-top: 20vh;
+    padding-left: 5vw;
+    padding-right: 5vw;
+    padding-bottom: 4vh;
 }
 
 #login-form  button{
@@ -545,5 +549,5 @@ html, body, #map {
 }
 
 .vicintyResults {
-    display: hiddens;
+    display: hidden;
 }

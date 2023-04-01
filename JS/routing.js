@@ -2,7 +2,7 @@ var formOnPage = false;
 var navigationOff;
 var plannerRouter = false;
 var routingControl;
-var routingControlNavigation
+var routingControlNavigation;
 
 // get route from current location (Main Roting and Navigation function)
 function showRoute(destination) {
@@ -58,6 +58,16 @@ function showRoute(destination) {
 
         var startMarker = L.marker(start);
 
+        // Define routing options
+        var options = {
+            profile: 'mapbox/walking', // Specify walking as the mode of transportation
+            alternatives: true // Request alternative routes
+        };
+
+        // Create a custom Mapbox routing engine with the specified options
+        var mapboxRouting = L.Routing.mapbox(MapboxAPIkey, options);
+
+
         // >>>>>>>>>>>>>>>>> add roputing machine for planning <<<<<<<<<<<<<<<<<<<<<
         routingControl = L.Routing.control({
             position: 'bottomleft',
@@ -65,32 +75,28 @@ function showRoute(destination) {
                 start,
                 destination
             ],
+            router: mapboxRouting,
             createMarker: function(i, waypoint) {
-                if (i === 0) {
-                    if(navigationOff){
-                        startMarker.setLatLng(waypoint.latLng)
-                        return startMarker;
-                    }else{return null;}
-                }
-                // Create a marker for all other waypoints
-                return L.marker(waypoint.latLng);
+                return null;
             },
             routeWhileDragging: false,
-            geocoder: L.Control.Geocoder,
+            geocoder: L.Control.Geocoder.nominatim(),
             autoRoute: true,
-            showAlternatives: false,
+            showAlternatives: true,
             containerClassName: 'itenary-for-routing_contrainer',
             itineraryClassName: 'itenary-for-routing',
             alternativeClassName: 'itenary-for-routing_alt',
             collapsible:true,
-            // altLineOptions: {
-            //     styles: [
-            //     { color: '#f00', opacity: 0.6, weight: 5 }, // red
-            //     { color: '#0f0', opacity: 0.6, weight: 5 }, // green
-            //     { color: '#00f', opacity: 0.6, weight: 5 }  // blue
-            //     ]
-            // }
+            altLineOptions: {
+                styles: [
+                    { color: '#f00', opacity: 0.6, weight: 5 }, // red
+                    { color: '#0f0', opacity: 0.6, weight: 5 }, // green
+                    { color: '#00f', opacity: 0.6, weight: 5 }  // blue
+                ]
+            }
         }).addTo(map);
+
+        
 
         var coordsOnRouteArray;
         var waypoints;
@@ -131,16 +137,13 @@ function showRoute(destination) {
             map.setView(coordsOnRouteArray[1],18);
 
             // add display for vicinity search results
-            vicSearchDisplay(routingControlNavigation)
+            var vicSearchResults = vicSearchDisplay(routingControlNavigation)
 
             // add second routing machine for navigation 
             routingControlNavigation = L.Routing.control({
-                createMarker: function(i, waypoint) {
-                    if (i === 0) {
-                        return null;
-                    }
-                    // Create a marker for all other waypoints
-                    return L.marker(waypoint.latLng);
+                router: mapboxRouting,
+                createMarker: function() {
+                    return null;
                 },
                 collapsible:true,
                 itineraryClassName: 'itenary-for-navigation',
@@ -150,13 +153,18 @@ function showRoute(destination) {
             }).addTo(map);
 
             // show navigation UI
-            var navigationSearchUI = navigationPannelSearchInterface(routingControlNavigation);
+            var vicintiySearchOptions = navigationPannelSearchInterface(routingControlNavigation, vicSearchResults);
 
             // add the waypoints form the routing planner
             routingControlNavigation.setWaypoints(waypoints);
             map.removeLayer(startMarker);
             navigationOff = false;
-            testNavigation(coordsOnRouteArray, routingControlNavigation);
+
+            // test naviagtion 
+            // testNavigation(coordsOnRouteArray, routingControlNavigation);
+
+            // start navigation function 
+            navigation(routingControlNavigation);
         });
         
 
@@ -191,68 +199,58 @@ function getCurerntLocation() {
     });
 }
 
-function testNavigation(coordsOnRouteArray, routingControl) {
-    // enable GPS tracking
-    // map.locate({watch: true, 
-    //     setView: true,
-    //     enableHighAccuracy});
+// navigation function 
+function navigation(routingControl){
     var customMarker = L.icon({
         iconUrl: '../Images/new-moon.png',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
     });
 
-    var navigationMarker = L.marker(coordsOnRouteArray[0], {icon: customMarker}).addTo(map);
+    var navigation = L.control.locate(); 
 
+    // var navigationMarker = L.marker([0,0], {icon: customMarker}).addTo(map);
+
+    // start tracking user location
+    navigation.start();
+
+    // add waypoint markers 
+    var waypointMarkers= []; // store waypoint markers
+    var route_waypoints = routingControl.getWaypoints(); // get waypoints on the route
+    for(var i = 1; i<route_waypoints.length; i++){
+        waypointMarkers[i] = L.marker(route_waypoints[i].latLng).addTo(map);
+    }
+
+    // set a marker while the user is moving
+    var navigationMarker = L.marker([0,0], {icon: customMarker}).addTo(map);
     
-    // for loop to go along the routed path
-    for (let i = 0; i < coordsOnRouteArray.length-100; i++) { // simulate route
-        if(!navigationOff){
-            var timeout = setTimeout(function() {
-                if(!navigationOff){
-                    // Another way to make gps work
-                    // map.setView(coordsOnRouteArray[i],20);
-                    // routingControl.spliceWaypoints(0, 1, coordsOnRouteArray[i]);
+    map.on('locationfound', function(e) {
+        routingControlNavigation.spliceWaypoints(0, 1, e.latlng);
+        // control.route();
+        // navigationMarker.setLatLng(e.latlng);
+        
+        navigationMarker.setLatLng(e.latlng); // make marker move with location
 
+        routingControl.spliceWaypoints(0, 1, e.latlng); // re-route as the user moves
 
-                    map.setView(coordsOnRouteArray[i], map.getZoom(), {'animate' : true, "pan": {
-                        "duration": 10
-                    }});
+        // check if a waypoint has been reached 
+        for(var z=1; z< waypointMarkers.length; z++){
+            var distanceToWaypoint = map.distance(e.latlng, route_waypoints[z].latLng);
 
-                    navigationMarker.setLatLng(coordsOnRouteArray[i]); // make marker move with location
-
-                    // update the route
-                    var waypoints = routingControlNavigation.getWaypoints();
-                    waypoints[0] = coordsOnRouteArray[i];
-                    routingControlNavigation.setWaypoints(waypoints);
-
-                    if(i==1){
-                        vicinitySearch(coordsOnRouteArray[i]);
-                    }
-                }else{
-                    if(navigationMarker){
-                        map.removeLayer(navigationMarker);
-                    }
-                    
-                    // break;
-                    clearTimeout(timeout);
-                }
-            }, 1000 * i);
-        } else{
-            if(navigationMarker){
-                map.removeLayer(navigationMarker);
+            if (distanceToWaypoint < 50){
+                map.removeLayer(waypointMarkers[z]);
+                routingControl.spliceWaypoints(1, 1,e.latlng);
             }
-            
-            break;
         }
 
-        // calculate the angle between the current and previous positions
-        // if (i>0) {
-        //     var angle = coordsOnRouteArray[i].bearingTo(coordsOnRouteArray[i-1]);
-        //     map.setBearing(angle); // set the map's bearing to the angle
-        // }
-    }
+        // keep map centered in the user
+        map.setView(e.latlng, map.getZoom(), {'animate' : true, "pan": {
+            "duration": 10
+        }});
+
+    });
 }
+
 
 function vicinitySearch(currentLocation) {
     var bounds = searchRadiusB_Box(currentLocation);
@@ -269,7 +267,7 @@ function vicinitySearch(currentLocation) {
 // add a display for vicinity search results
 function vicSearchDisplay(){
     // add add buttons for navigation system
-    var navigationControl = L.control.custom({
+    var vicSearchResults = L.control.custom({
         position: 'topleft',
         id: 'vicintiyResults',
         content :   '<button id="open_resultsButton">100</button>'+
@@ -295,6 +293,7 @@ function vicSearchDisplay(){
         $('#navigation-control').css('display', 'block');
     });
 
+    return vicSearchResults;
 }
 
 // loop though to show seach results
@@ -344,7 +343,7 @@ function searchRadiusB_Box(currentUserLocation){
 }
 
 // add UI while nvigating
-function navigationPannelSearchInterface (routingMachine) {
+function navigationPannelSearchInterface (routingMachine, vicSearchResults) {
     // add add buttons for navigation system
     var navigationControl = L.control.custom({
         position: 'bottomright',
@@ -417,12 +416,22 @@ function navigationPannelSearchInterface (routingMachine) {
                         '</div>'+
                     '</div>'+
                     '<hr class="mt-2">'+
+                    '<label for="customRange1" id="rangeTag" class="form-label"></label>'+
+                    '<input type="range" class="form-range" id="vicinityRange" max="20" value="2"></input>'+
+                    '<hr class="mt-2">'+
                     '<div class="row vicinityOptionInput_div">'+
                         '<label class="form-label" for="vicinityOptionInput"> Or Enter:</label>'+
                         '<input type="text" id="vicinityOptionInput" class="form-control" />'+
                     '</div>'+
                     '<button type="submit" style="display: none"></button>'+
             '</form>');
+
+            // update range 
+            $('#rangeTag').text('Range: ' + $('#vicinityRange').val() +'km'); // set initial value
+  
+            $('#vicinityRange').on('input', function() {
+                $('#rangeTag').text('Range: ' + $('#vicinityRange').val() +'km'); // update value on input change
+            });
 
             // display form
             $('#navigation-control-form').css('display', 'block');
@@ -437,7 +446,7 @@ function navigationPannelSearchInterface (routingMachine) {
             $('#search').html('<i class="fas fa-arrow-left fa-xl"> </i>');
             $('#search').css('background-color', 'rgb(255, 208, 0)');
 
-        } else{
+        } else{ 
             formOnPage = false;
             // display form
             $('#navigation-control-form').css('display', 'none');
@@ -456,18 +465,28 @@ function navigationPannelSearchInterface (routingMachine) {
     });
 
     
-
+    // button to cancel navigation 
     $('#cancelNavigation').on('click', function(){
         
-        if(formOnPage){
+        if(formOnPage){ // get all the options selected for the vicinity search
+            var formOptions = []
+            formOptions.push( { 'radioInput' :  $("input[name='vicinityOption']:checked").val()}); // get selected option
+            formOptions.push( { 'textInput' :   $('#vicinityOptionInput').val()});
+            formOptions.push( {'range' : $('#vicinityRange').val()});
+
+            map.on('locationfound', function(e){
+                formOptions.push( {'latlng' : e.latlng});
+                return formOptions;
+            });
 
         } else {
+            map.removeControl(vicSearchResults);
             map.removeControl(navigationControl);
             map.removeControl(routingMachine);
             addToggleMenuButton();
-            navigationOff = fasle;
+            navigationOff = false;
 
-            // add seach back
+            // add search back
             searchControl = L.esri.Geocoding.geosearch({
                 providers: [
                     L.esri.Geocoding.arcgisOnlineProvider({
