@@ -50,51 +50,58 @@ L.esri.Vector.vectorBasemapLayer("ArcGIS:Navigation", {
 // set the minimum zoom level to 5
 map.setMinZoom(3);
 
-// pan to current location 
-var locateControl = L.control.locate({
-    position: "topleft",
-    follow: true,
-    setView: true,
-    flyTo: true,
-    drawCircle: true,
-    keepCurrentZoomLevel: false,
-    markerStyle: {
-      weight: 1,
-      opacity: 0.8,
-      fillOpacity: 0.8
-    },
-    circleStyle: {
-      weight: 1,
-      clickable: false
-    },
-    icon: "fas fa-location-arrow",
-    metric: false,
-    strings: {
-      title: "Show me where I am",
-      popup: "You are within {distance} {unit} from this point",
-      outsideMapBoundsMsg: "You seem located outside the boundaries of the map"
-    },
-    locateOptions: {
-      maxZoom: 15,
-      watch: true,
-      enableHighAccuracy: true,
-      maximumAge: 10000,
-      timeout: 10000
-    }
-}).addTo(map);
+function addCurrentLocationButton() {
+    // pan to current location 
+    var locControl = L.control.locate({
+        position: "topleft",
+        follow: true,
+        setView: true,
+        flyTo: true,
+        drawCircle: true,
+        keepCurrentZoomLevel: false,
+        markerStyle: {
+        weight: 1,
+        opacity: 0.8,
+        fillOpacity: 0.8
+        },
+        circleStyle: {
+        weight: 1,
+        clickable: false
+        },
+        icon: "fas fa-location-arrow",
+        metric: false,
+        strings: {
+        title: "Show me where I am",
+        popup: "You are within {distance} {unit} from this point",
+        outsideMapBoundsMsg: "You seem located outside the boundaries of the map"
+        },
+        locateOptions: {
+        maxZoom: 15,
+        watch: true,
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 10000
+        }
+    }).addTo(map);
+
+    return locControl;
+}
 
 // button to fly to current location 
-new L.cascadeButtons([
-    {icon:"fas fa-location-crosshairs" , ignoreActiveState:true , command: () =>{
-        map_init_basic(map, null);
-     }},
-], {position:'topleft', direction:'horizontal'}).addTo(map);
+// new L.cascadeButtons([
+//     {icon:"fas fa-location-crosshairs" , ignoreActiveState:true , command: () =>{
+//         map_init_basic(map, null);
+//      }},
+// ], {position:'topleft', direction:'horizontal'}).addTo(map);
 
 var pinButton = new L.cascadeButtons([
     {icon:"fas fa-map-pin" , ignoreActiveState:true , command: () =>{
         displayPinsOnMap();
     }},
 ], {position:'topleft', direction:'horizontal'}).addTo(map);
+
+// add location for location functionality
+var locateControl = addCurrentLocationButton();
 
 // ----------------- add toggle menu ----------------------
 function addToggleMenuButton() {
@@ -304,6 +311,7 @@ function updateLocation(map) {
             map_ins = map;
         },
         function (err) {
+            console.log(err);
         },
         {
             enableHighAccuracy: true,
@@ -331,61 +339,6 @@ function setMapToCurrentLocation(map, pos) {
     }).addTo(map);
     $(".toast-body").html("Found location<br>Lat: " + myLatLon.lat + " Lon: " + myLatLon.lng);
     $(".toast").toast('show');
-}
-
-// show results of the overpass query on the map
-function showPoiMarkers() { 
-    console.log("In showPoiMarkers");
-    
-    // If we have markers on the map from a previous query, we remove them.
-    if (poi_markers) {
-        map.removeLayer(poi_markers);
-    }
-    
-    // Show a spinner to indicate Ajax call in progress.
-    // toggleCentredSpinner("show");
-    
-    $.ajax({
-        type: "POST",
-        headers: {"Authorization": window.localStorage.getItem('accessToken')},
-        // contentType: "application/json",
-        url: HOST + "/map_search/",
-        data: {
-            query: $("#searchValue").val(),
-            bbox: map.getBounds().toBBoxString()
-        },
-        success: function(data) {
-
-            //Create a cluster group for our markers to avoid clutter. 'Marker Cluster' is a Leaflet plugin.
-            poi_markers = L.markerClusterGroup();
-            
-            // Handle GeoJSON response from the server.
-            var geoJsonLayer = L.geoJson(data, {
-                pointToLayer: function (feature, latlng) {
-                    // Associate each point with the icon we made earlier
-                    return L.marker(latlng, {icon: greenIcon});
-                },
-                onEachFeature: function (feature, layer) {
-                    // For each feature associate a popup with the 'name' property
-                    layer.bindPopup(feature.properties.name);
-                }
-            });
-            
-            // Add the GeoJSON layer to the cluster.
-            poi_markers.addLayer(geoJsonLayer);
-            
-            // Add the cluster to the map.
-            map.addLayer(poi_markers);
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            var message = "OSM Overpass query failed.<br/>";
-            console.log("Status: " + jqXHR.status + " " + jqXHR.responseText);
-            showOkAlert(message);
-        },
-        always: function () {
-            toggleCentredSpinner("hide");
-        }
-    });
 }
 
 // -----------------  click on map  --------------------------

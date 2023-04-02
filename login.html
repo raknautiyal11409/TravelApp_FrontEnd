@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Login Page</title>
-    <link rel="stylesheet" href="CSS/style.css">
+    <link rel="stylesheet" href="CSS/loginReg.css">
     <link rel="stylesheet" href="node_modules\bootstrap\dist\css\bootstrap.min.css"/>
     <script src="node_modules\bootstrap\dist\js\bootstrap.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
@@ -13,24 +13,29 @@
 
       <!-- Add the logo -->
       <div class="row">
-        <img src="" alt="" class="rounded mx-auto d-block">
+        <img src="Images/logo.png" alt="go nav app logo" class="mx-auto d-block" id="">
       </div>
       <form id="login-form" class="row">
         <!-- Email input -->
         <div class="form-outline mb-4 row">
           <label class="form-label" for="email">Email address</label>
-          <input type="email" id="email" class="form-control" />
+          <input type="email" id="email" class="form-control form-control-lg" />
         </div>
 
         <!-- Password input -->
         <div class="form-outline mb-4 row">
           <label class="form-label" for="password">Password</label>
-          <input type="password" id="password" class="form-control" />
+          <input type="password" id="password" class="form-control form-control-lg" />
         </div>
 
         <!-- Submit button -->
-        <div>
-          <button type="submit" class="btn btn-dark btn-block mb-4 row d-flex justify-content-center">Sign in</button>
+        <div class="row justify-content-center">
+          <button type="submit" class="btn btn-dark btn-block mb-4 row">Sign in</button>
+          <div class="row justify-content-center">
+            <p>Don't have a account? <a href="/registeration.html" class="link-primary"> Sign Up!!</a> </p>
+            
+          </div>
+          
         </div>
       </form>
     </div>

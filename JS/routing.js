@@ -1,8 +1,12 @@
+const { distance } = require("@turf/turf");
+
 var formOnPage = false;
 var navigationOff;
 var plannerRouter = false;
 var routingControl;
 var routingControlNavigation;
+var formOptions;
+var routing_currentLocation;
 
 // get route from current location (Main Roting and Navigation function)
 function showRoute(destination) {
@@ -10,11 +14,21 @@ function showRoute(destination) {
     var start;
     var iconFinish;
     navigationOff= true;
+    formOptions = null;
     var customMarker = L.icon({
         iconUrl: '../Images/compass.png',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
     });
+
+    // stop locate control before getting current location
+    locateControl.remove();
+
+    // stop locate control before getting current location
+    if(routingControl != null){
+        map.removeControl(routingControl);
+    }
+
 
 
     getCurerntLocation().then(function(currentLocation){
@@ -76,9 +90,6 @@ function showRoute(destination) {
                 destination
             ],
             router: mapboxRouting,
-            createMarker: function(i, waypoint) {
-                return null;
-            },
             routeWhileDragging: false,
             geocoder: L.Control.Geocoder.nominatim(),
             autoRoute: true,
@@ -105,7 +116,7 @@ function showRoute(destination) {
             
         // })
 
-        // run function when a rote is found
+        // run function when a route is found
         routingControl.on('routesfound', function(e) {
             plannerRouter = false;
             waypoints = routingControl.getWaypoints()
@@ -137,7 +148,7 @@ function showRoute(destination) {
             map.setView(coordsOnRouteArray[1],18);
 
             // add display for vicinity search results
-            var vicSearchResults = vicSearchDisplay(routingControlNavigation)
+            var vicSearchResultsDisplay = vicSearchDisplay(routingControlNavigation)
 
             // add second routing machine for navigation 
             routingControlNavigation = L.Routing.control({
@@ -153,17 +164,17 @@ function showRoute(destination) {
             }).addTo(map);
 
             // show navigation UI
-            var vicintiySearchOptions = navigationPannelSearchInterface(routingControlNavigation, vicSearchResults);
+            navigationPannelSearchInterface(routingControlNavigation, vicSearchResultsDisplay);
 
             // add the waypoints form the routing planner
             routingControlNavigation.setWaypoints(waypoints);
             map.removeLayer(startMarker);
             navigationOff = false;
 
-            // test naviagtion 
+            // ------------> test naviagtion 
             // testNavigation(coordsOnRouteArray, routingControlNavigation);
 
-            // start navigation function 
+            // ------------> start navigation function 
             navigation(routingControlNavigation);
         });
         
@@ -207,12 +218,12 @@ function navigation(routingControl){
         iconAnchor: [16, 32],
     });
 
-    var navigation = L.control.locate(); 
+    // var navigation = L.control.locate(); 
 
     // var navigationMarker = L.marker([0,0], {icon: customMarker}).addTo(map);
 
     // start tracking user location
-    navigation.start();
+    map.locate({ setView: true, watch: true, enableHighAccuracy: true });
 
     // add waypoint markers 
     var waypointMarkers= []; // store waypoint markers
@@ -222,12 +233,17 @@ function navigation(routingControl){
     }
 
     // set a marker while the user is moving
-    var navigationMarker = L.marker([0,0], {icon: customMarker}).addTo(map);
+    var navigationMarker = L.marker([0,0], {icon: customMarker}).addTo(map); 
     
     map.on('locationfound', function(e) {
+
+        // check if user has a search input
+        if(formOptions != null){
+            vicinitySearch(e.latlng, formOptions);
+        }
+
+        routing_currentLocation = e.latlng;
         routingControlNavigation.spliceWaypoints(0, 1, e.latlng);
-        // control.route();
-        // navigationMarker.setLatLng(e.latlng);
         
         navigationMarker.setLatLng(e.latlng); // make marker move with location
 
@@ -251,23 +267,76 @@ function navigation(routingControl){
     });
 }
 
+// implementation of vicinity search 
+function vicinitySearch(currentLocation, formdata) {
+    var searchThreshold = 500; // search threshold to search 500 meters before exiting the bounding box
+    var rangeAfterThresh = (formdata.range*1000) - searchThreshold; // calculate the range to perfom search at 
+    var distanceSinceLastSearch = map.distance(currentLocation, formdata.latlng); // calculate the distance from the last point of search 
+    
+    // check to see when the search needs to be performed 
+    if(distanceSinceLastSearch > rangeAfterThresh){
+        queryEsri(formdata.radioInput, formdata.textInput, formdata.range, currentLocation);
+        formdata.latlng = currentLocation;
+        formdata.newInputs = false;
+    }
 
-function vicinitySearch(currentLocation) {
-    var bounds = searchRadiusB_Box(currentLocation);
-    L.esri.Geocoding.geocode({apikey: esriApiKey}).text('Cafe').within(bounds).run(function (err, response) {
-        if (err) {
-        console.log(err);
-        return;
-        }
-        console.log(response);
-        show_VicinitySearch_results(response);
-    }); 
+    // perform search if there are new inputs 
+    if(formdata.newInputs){
+        formdata.newInputs = false;
+        queryEsri(formdata.radioInput, formdata.textInput, formdata.range, currentLocation);
+        formdata.latlng = currentLocation;
+    }
+}
+
+// perform search query 
+function queryEsri(categoryVal, textVal, radius, currentLocation){ 
+    
+    //get bbox for the search radius
+    var bounds = searchRadiusB_Box(currentLocation, radius);
+    
+    if(textVal != ''){ // prioritise text search 
+
+        // perform the search query
+        L.esri.Geocoding.geocode({apikey: esriApiKey}).text(textVal).within(bounds).run(function (err, response) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            console.log(response);
+            show_VicinitySearch_results(response);
+        }); 
+
+    } else {
+        
+        // perform the search query
+        L.esri.Geocoding.geocode({apikey: esriApiKey}).category(categoryVal).within(bounds).run(function (err, response) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            console.log(response);
+            show_VicinitySearch_results(response);
+        }); 
+
+    }
+}
+
+// get a bounding box for the search radius
+function searchRadiusB_Box(currentUserLocation, radius){
+
+    var turf_point = turf.point([currentUserLocation.lng, currentUserLocation.lat]);
+    var options = { steps: 64, units: 'kilometers' };
+    var circle = turf.circle(turf_point, radius, options);
+    var bbox = turf.bbox(circle);
+    var bounds = L.latLngBounds(L.latLng(bbox[1], bbox[0]), L.latLng(bbox[3], bbox[2]));
+    return bounds;
+
 }
 
 // add a display for vicinity search results
 function vicSearchDisplay(){
     // add add buttons for navigation system
-    var vicSearchResults = L.control.custom({
+    var vicSearchResultsDisplay = L.control.custom({
         position: 'topleft',
         id: 'vicintiyResults',
         content :   '<button id="open_resultsButton">100</button>'+
@@ -293,7 +362,7 @@ function vicSearchDisplay(){
         $('#navigation-control').css('display', 'block');
     });
 
-    return vicSearchResults;
+    return vicSearchResultsDisplay;
 }
 
 // loop though to show seach results
@@ -330,20 +399,8 @@ function show_VicinitySearch_results(results) {
 
 }
 
-// get a bounding box for the search radius
-function searchRadiusB_Box(currentUserLocation){
-
-    var turf_point = turf.point([currentUserLocation.lng, currentUserLocation.lat]);
-    var options = { steps: 64, units: 'kilometers' };
-    var circle = turf.circle(turf_point, 2, options);
-    var bbox = turf.bbox(circle);
-    var bounds = L.latLngBounds(L.latLng(bbox[1], bbox[0]), L.latLng(bbox[3], bbox[2]));
-    return bounds;
-
-}
-
 // add UI while nvigating
-function navigationPannelSearchInterface (routingMachine, vicSearchResults) {
+function navigationPannelSearchInterface (routingMachine, vicSearchResultsDisplay) {
     // add add buttons for navigation system
     var navigationControl = L.control.custom({
         position: 'bottomright',
@@ -464,27 +521,17 @@ function navigationPannelSearchInterface (routingMachine, vicSearchResults) {
         }
     });
 
-    
     // button to cancel navigation 
-    $('#cancelNavigation').on('click', function(){
-        
-        if(formOnPage){ // get all the options selected for the vicinity search
-            var formOptions = []
-            formOptions.push( { 'radioInput' :  $("input[name='vicinityOption']:checked").val()}); // get selected option
-            formOptions.push( { 'textInput' :   $('#vicinityOptionInput').val()});
-            formOptions.push( {'range' : $('#vicinityRange').val()});
-
-            map.on('locationfound', function(e){
-                formOptions.push( {'latlng' : e.latlng});
-                return formOptions;
-            });
-
-        } else {
-            map.removeControl(vicSearchResults);
+    $('#cancelNavigation').on('click', function() {
+            
+        if(!formOnPage) {
+            map.removeControl(vicSearchResultsDisplay);
             map.removeControl(navigationControl);
             map.removeControl(routingMachine);
             addToggleMenuButton();
             navigationOff = false;
+            map.stopLocate;
+            locateControl = addCurrentLocationButton();
 
             // add search back
             searchControl = L.esri.Geocoding.geosearch({
@@ -496,10 +543,37 @@ function navigationPannelSearchInterface (routingMachine, vicSearchResults) {
                 ],
                 useMapBounds: 8
             }).addTo(map);
+        } else {
+            
+            formOptionsTemp = { 'radioInput' :  $("input[name='vicinityOption']:checked").val(), 
+            'textInput' :   $('#vicinityOptionInput').val(), 
+            'range' : $('#vicinityRange').val(),
+            'latlng' :  routing_currentLocation, 
+            'newInputs' : true};
+
+            if( formOptionsTemp.radioInput != undefined ||  formOptionsTemp.textInput != ''){
+                formOptions = formOptionsTemp;
+                formOnPage = false;
+                // display form
+                $('#navigation-control-form').css('display', 'none');
+
+                // empty div before adding contents
+                $('#navigation-control-form').text('');
+
+                //change cancel button to search button functionality
+                $('#cancelNavigation').html('<i class="fas fa-circle-xmark fa-xl"> </i>');
+                $('#cancelNavigation').css('background-color', 'rgb(250, 32, 32)');
+
+                //change search button to back button functionality
+                $('#search').html('<i class="fas fa-magnifying-glass fa-xl"> </i>');
+                $('#search').css('background-color', 'rgb(0, 174, 255)');
+            }else {
+                alert('Please select a option or enter text!!!!');
+            }
+        
         }
 
     });
-
 }
 
 // close button to cancle navigation planner
@@ -518,6 +592,8 @@ function closeNavigationButton(){
             click: function() {
 
                 map.removeControl(removeSearchMarkerButton);
+
+                locateControl = addCurrentLocationButton();
 
                 if(!plannerRouter){
                     map.removeControl(routingControl);

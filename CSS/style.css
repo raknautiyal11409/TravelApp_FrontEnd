@@ -8,27 +8,6 @@ body {
     width: 99.1vw;
 }
 
-/* Login Page */
-#login-fromContent{
-    max-width: 700px;
-    margin-top: 20vh;
-    padding-left: 4vw;
-    padding-right: 4vw;
-    background-color: rgb(0, 202, 125);
-    border-radius: 20px;
-}
-
-#login-form {
-    padding-top: 20vh;
-    padding-left: 5vw;
-    padding-right: 5vw;
-    padding-bottom: 4vh;
-}
-
-#login-form  button{
-    max-width: 400px;
-}
-
 /* Menu toggle */
 #toggleButtonMenu{
     width: 50px;
