@@ -1,33 +1,49 @@
 /*  CSS for login and registeration  */
+html {
+    height: 100vh;
+}
+
 body{
     height: fit-content;
-    padding-right: 2vw;
-    padding-left: 2vw;
+    padding-right: 4vw;
+    padding-left: 4vw;
+    padding-bottom: 4vh;
 }
 
 /* Login Page */
 #login-fromContent{
     max-width: 700px;
     margin-top: 10vh;
-    padding-left: 4vw;
-    padding-right: 4vw;
-    background-color: rgb(0, 202, 125);
     border-radius: 20px;
+    padding: 0em;
+}
+
+#logoImgContainer {
+    background-color: #00ca7d;
+    border-radius: 20px 20px 0 0 ;
+    width: inherit;
+    margin: 0em;
 }
 
 #login-fromContent img{
-    max-width: 250px;
+    max-width: 200px;
     max-height: 250px;
     margin-top: 4vh;
-    border-radius: 50%;
+    margin-bottom: 2vh;
+    border-radius: 25%;
 }
 
 
 #login-form {
+    width: inherit;
+    margin: 0em;
     padding-top: 2vh;
     padding-left: 5vw;
     padding-right: 5vw;
     padding-bottom: 4vh;
+    background-color: white;
+    border-radius: 0 0  20px 20px;
+    box-shadow: 20px 20px 1000px grey;
 }
 
 #login-form  button, #registeration-form button {
@@ -41,22 +57,30 @@ body{
 /* registertion page */
 
 #registerationContainer {
-    background-color: rgb(0, 202, 125);
     max-width: 700px;
     margin-top: 10vh;
-    padding-left: 2vw;
-    padding-right: 2vw;
     border-radius: 20px;
+    padding: 0em;
 }
 
 #registerationContainer img{
-    max-width: 250px;
-    max-height: 250px;
+    max-width: 200px;
+    max-height: 200px;
     margin-top: 4vh;
-    border-radius: 50%;
+    margin-bottom: 2vh;
+    border-radius: 25%;
 }
 
 #registeration-form {
-    margin-top: 4vh;
-    margin-bottom: 4vh;
+    padding-top: 4vh;
+    padding-bottom: 4vh;
+    width: inherit;
+    margin: 0em;
+    border-radius: 0 0  20px 20px;
+    box-shadow: 20px 20px 1000px grey;
+}
+
+#registeration-form h4{
+    text-align: center;
+    margin-bottom: 2vh;
 }

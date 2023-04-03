@@ -2,18 +2,30 @@
 <html>
   <head>
     <title>Login Page</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <link rel="stylesheet" href="CSS/loginReg.css">
+    
+    <!-- Bootstrap import -->
     <link rel="stylesheet" href="node_modules\bootstrap\dist\css\bootstrap.min.css"/>
     <script src="node_modules\bootstrap\dist\js\bootstrap.min.js"></script>
+    
+    <!-- Import jquery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
     <link rel="shortcut icon" href="~/favicon.ico">
+
+    <!-- Import Notyf -->
+    <link rel="stylesheet" href="node_modules\notyf\notyf.min.css">
+    <script src="node_modules\notyf\notyf.min.js"></script>
+
   </head>
   <body>
-    <div class="container" id="login-fromContent">
+    <div class="justify-content-center container" id="login-fromContent">
 
       <!-- Add the logo -->
-      <div class="row">
-        <img src="Images/logo.png" alt="go nav app logo" class="mx-auto d-block" id="">
+      <div class="row" id="logoImgContainer">
+        <img src="Images/goNavLogo.png" alt="go nav app logo" class="mx-auto d-block" id="">
       </div>
       <form id="login-form" class="row">
         <!-- Email input -->
@@ -32,7 +44,7 @@
         <div class="row justify-content-center">
           <button type="submit" class="btn btn-dark btn-block mb-4 row">Sign in</button>
           <div class="row justify-content-center">
-            <p>Don't have a account? <a href="/registeration.html" class="link-primary"> Sign Up!!</a> </p>
+            <p>Don't have a account? <a href="/registeration.html" class="link-primary"> Sign Up!</a> </p>
             
           </div>
           
